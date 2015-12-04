@@ -18,6 +18,7 @@ Provides definitions for:
 *)
 
 Require Import Omega.
+Require Import Ensembles.
 
 (** Key values will be [nat] *)
 
@@ -117,7 +118,6 @@ Inductive message(basicType:Type) : Type :=
 | basic : basicType -> message basicType
 | key : keyType -> message basicType
 | encrypt : message basicType -> keyType -> message basicType
-| sign : message basicType -> keyType -> message basicType
 | hash : message basicType -> message basicType
 | pair : message basicType -> message basicType -> message basicType.
 
@@ -126,13 +126,16 @@ Inductive message(basicType:Type) : Type :=
 
 Definition is_not_decryptable{T:Type}(m:message T)(k:keyType):Prop :=
   match m with
-  | basic _ => True
-  | key _ => True
   | encrypt m' k' => k <> inverse k'
-  | sign _ _ => True
-  | hash _ => True
-  | pair _ _ => True
+  | _ => True
   end.
+
+Definition is_decryptable{T:Type}(m:message T)(k:keyType):Prop :=
+  match m with
+  | encrypt m' k' => k = inverse k'
+  | _ => False
+  end.
+
 
 (** [decrypt] returns either a decrypted message or a proof of why the message
   cannot be decrypted. *)
@@ -143,7 +146,6 @@ refine
   | basic c => inright _ _
   | key _ => inright _ _
   | encrypt m' j => (if (is_inverse k j) then (inleft _ m') else (inright _ _ ))
-  | sign m' k => inright _ _
   | hash _ => inright _ _
   | pair _ _ => inright _ _
   end.
@@ -151,7 +153,6 @@ Proof.
   reflexivity.
   reflexivity.
   simpl. assumption.
-  reflexivity.
   reflexivity.
   reflexivity.
 Defined.
@@ -162,44 +163,37 @@ Eval compute in decrypt(encrypt nat (basic nat 1) (symmetric 1)) (symmetric 2).
 
 (** Predicate that determines if a message is properly signed. *)
 
-Definition is_signed{T:Type}(m:message T)(k:keyType):Prop :=
-  match m with
-  | basic _ => False
-  | key _ => False
-  | encrypt _ _ => False
-  | sign m' k' => k = inverse k'
-  | hash _ => False
-  | pair _ _ => False
-  end.
-
 (** Signature check returns either a proof that the signature is correct
   or a proof that the signature is not correct. *)
 
-Fixpoint check{T:Type}(m:message T)(k:keyType):{(is_signed m k)}+{not (is_signed m k)}.
-refine
-  match m with
-  | basic c => right _ _
-  | key _ => right _ _
-  | sign m' j => (if (is_inverse k j) then (left _ _) else (right _ _ ))
-  | encrypt m' k => right _ _
-  | hash _ => right _ _
-  | pair _ _ => right _ _
-  end.
+Definition sign{T:Type}(m:message T)(k:keyType):message T :=
+  (pair T m (encrypt T (hash T m) k)).
+
+Theorem is_hash{T:Type}(m:message T):{exists m':message T, m=(hash T m')}+{forall m':message T, m<>(hash T m')}.
 Proof.
-  unfold not. intros. simpl in H. assumption.
-  unfold not. intros. simpl in H. assumption.
-  unfold not. intros. simpl in H. assumption.
-  destruct (is_inverse j k).
-  simpl. rewrite _H. reflexivity.
-  simpl. rewrite <- _H. reflexivity.
-  simpl. assumption.
-  unfold not. intros. simpl in H. assumption.
-  unfold not. intros. simpl in H. assumption.
+  destruct m;
+  try (left; intros; exists m; reflexivity);
+  try (right; intros; unfold not; intros; inversion H).
 Defined.
 
-Eval compute in check(sign nat (basic nat 1) (private 1)) (public 1).
+Theorem message_eq_dec: forall T:Type, forall m m':message T, {m=m'}+{m<>m'}.
+Proof.
+  destruct m; destruct m'.
+  
 
-Eval compute in check(sign nat (basic nat 1) (private 1)) (public 2).
+Definition is_signed{T:Type}(m:message T)(k:keyType):Prop :=
+  match m with
+  | (pair m m') => match m' with
+                  | encrypt m'' k' =>  match m'' with
+                                      | (hash m''') => m=m''' /\ (k = inverse k')
+                                      | _ => False
+                                      end
+                  | _ => False
+                  end
+  | _ => False
+  end.
+
+(** I think I just proved that nothing is signed.  Sigh... *)
 
 Theorem check_dec: forall T, forall m:(message T), forall k, {(is_signed m k)}+{not (is_signed m k)}.
 Proof.
@@ -208,16 +202,22 @@ Proof.
   right. unfold is_signed. tauto.
   right. unfold is_signed. tauto.
   right. unfold is_signed. tauto.
-  destruct (is_inverse k0 k).
-  left. simpl. rewrite e. auto.
-  right. unfold not. simpl. unfold not in n. intros. subst. auto.
   right. unfold is_signed. tauto.
-  right. unfold is_signed. tauto.
+  destruct m2.
+    right. unfold not. intros. unfold is_signed in H. tauto.
+    right. unfold not. intros. unfold is_signed in H. tauto.
+    destruct m2.
+      right; unfold not; intros; simpl in H; tauto.
+      right; unfold not; intros; simpl in H; tauto.
+      right; unfold not; intros; simpl in H; tauto.
+      destruct (is_inverse k k0).
+        left. unfold not. simpl. split.
+        
 Defined.
+    
+Eval compute in check_dec nat (sign (basic nat 1) (private 1)) (public 1).
 
-Eval compute in check_dec nat (sign nat (basic nat 1) (private 1)) (public 1).
-
-Eval compute in check_dec nat (sign nat (basic nat 1) (private 1)) (public 2).
+Eval compute in check_dec nat (sign (basic nat 1) (private 1)) (public 2).
 
 (** Uncomment these Notation definitions if you would rather use [good] and
   [bad] while hiding proof values than use [inleft] and [inright].  This
