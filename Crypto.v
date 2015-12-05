@@ -176,10 +176,12 @@ Proof.
   try (right; intros; unfold not; intros; inversion H).
 Defined.
 
+Theorem basic_eq_dec: forall b b':
+
 Theorem message_eq_dec: forall T:Type, forall m m':message T, {m=m'}+{m<>m'}.
 Proof.
   destruct m; destruct m'.
-  
+  destruct (t=t0).
 
 Definition is_signed{T:Type}(m:message T)(k:keyType):Prop :=
   match m with
