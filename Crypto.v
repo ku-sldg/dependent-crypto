@@ -114,23 +114,23 @@ Qed.
 (** Basic messages held abstract.  Compound messages are keys, encrypted and
   signed messages, hashes and pairs. *) 
 
-Inductive message(basicType:Type) : Type :=
-| basic : basicType -> message basicType
-| key : keyType -> message basicType
-| encrypt : message basicType -> keyType -> message basicType
-| hash : message basicType -> message basicType
-| pair : message basicType -> message basicType -> message basicType.
+Inductive message : Type :=
+| basic : nat -> message
+| key : keyType -> message
+| encrypt : message -> keyType -> message
+| hash : message -> message
+| pair : message -> message -> message.
 
 (** Predicate that determines if a message cannot be decrypted.  Could be
   that it is not encrypted to begin with or the wrong key is used. *)
 
-Definition is_not_decryptable{T:Type}(m:message T)(k:keyType):Prop :=
+Definition is_not_decryptable(m:message)(k:keyType):Prop :=
   match m with
   | encrypt m' k' => k <> inverse k'
   | _ => True
   end.
 
-Definition is_decryptable{T:Type}(m:message T)(k:keyType):Prop :=
+Definition is_decryptable(m:message)(k:keyType):Prop :=
   match m with
   | encrypt m' k' => k = inverse k'
   | _ => False
@@ -140,10 +140,10 @@ Definition is_decryptable{T:Type}(m:message T)(k:keyType):Prop :=
 (** [decrypt] returns either a decrypted message or a proof of why the message
   cannot be decrypted. *)
 
-Fixpoint decrypt{T:Type}(m:message T)(k:keyType):(message T)+{(is_not_decryptable m k)}.
+Fixpoint decrypt(m:message)(k:keyType):message+{(is_not_decryptable m k)}.
 refine
   match m with
-  | basic c => inright _ _
+  | basic _ => inright _ _
   | key _ => inright _ _
   | encrypt m' j => (if (is_inverse k j) then (inleft _ m') else (inright _ _ ))
   | hash _ => inright _ _
@@ -157,31 +157,32 @@ Proof.
   reflexivity.
 Defined.
   
-Eval compute in decrypt(encrypt nat (basic nat 1) (symmetric 1)) (symmetric 1).
+Eval compute in decrypt(encrypt (basic 1) (symmetric 1)) (symmetric 1).
 
-Eval compute in decrypt(encrypt nat (basic nat 1) (symmetric 1)) (symmetric 2).
+Eval compute in decrypt(encrypt (basic 1) (symmetric 1)) (symmetric 2).
 
 (** Predicate that determines if a message is properly signed. *)
 
 (** Signature check returns either a proof that the signature is correct
   or a proof that the signature is not correct. *)
 
-Definition sign{T:Type}(m:message T)(k:keyType):message T :=
-  (pair T m (encrypt T (hash T m) k)).
+Definition sign(m:message)(k:keyType):message :=
+  (pair m (encrypt (hash m) k)).
 
-Theorem is_hash{T:Type}(m:message T):{exists m':message T, m=(hash T m')}+{forall m':message T, m<>(hash T m')}.
+Theorem is_hash(m:message):{exists m':message, m=(hash m')}+{forall m':message, m<>(hash m')}.
 Proof.
   destruct m;
   try (left; intros; exists m; reflexivity);
   try (right; intros; unfold not; intros; inversion H).
 Defined.
 
-Theorem basic_eq_dec: forall b b':
-
-Theorem message_eq_dec: forall T:Type, forall m m':message T, {m=m'}+{m<>m'}.
+Theorem message_eq_dec: forall T:Type, basic_eq_dec T -> forall m m':message T, {m=m'}+{m<>m'}.
 Proof.
+  intros.
+  unfold basic_eq_dec in H.
   destruct m; destruct m'.
-  destruct (t=t0).
+  assert (t=t0 \/ t<>t0). apply H.
+  assert (
 
 Definition is_signed{T:Type}(m:message T)(k:keyType):Prop :=
   match m with
