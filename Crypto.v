@@ -176,14 +176,53 @@ Proof.
   try (right; intros; unfold not; intros; inversion H).
 Defined.
 
-Theorem message_eq_dec: forall T:Type, basic_eq_dec T -> forall m m':message T, {m=m'}+{m<>m'}.
+Theorem eq_key_dec: forall k k':keyType, {k=k'}+{k<>k'}.
 Proof.
   intros.
-  unfold basic_eq_dec in H.
-  destruct m; destruct m'.
-  assert (t=t0 \/ t<>t0). apply H.
-  assert (
+  destruct k; destruct k'.
+  destruct (eq_nat_dec k k0).
+  left. rewrite e. reflexivity.
+  right. unfold not. intros. inversion H. contradiction.
+  right. unfold not. intros. inversion H.
+  right. unfold not. intros. inversion H.
+  right. unfold not. intros. inversion H.
+  destruct (eq_nat_dec k k0).
+  left. rewrite e. reflexivity.
+  right. unfold not. intros. inversion H. contradiction.
+  right. unfold not. intros. inversion H.
+  right. unfold not. intros. inversion H.
+  right. unfold not. intros. inversion H.
+  destruct (eq_nat_dec k k0).
+  left. rewrite e. reflexivity.
+  right. unfold not. intros. inversion H. contradiction.
+Defined.
 
+Theorem message_eq_dec: forall m m':message, {m=m'}+{m<>m'}.
+Proof.
+  intros.
+  induction m; induction m'.
+  destruct (eq_nat_dec n n0).
+    left. subst. reflexivity.
+    right. unfold not. intros. inversion H. contradiction.
+  right. unfold not. intros. inversion H.
+  right. unfold not. intros. inversion H.
+  right. unfold not. intros. inversion H.
+  right. unfold not. intros. inversion H.
+  right. unfold not. intros. inversion H.
+  destruct (eq_key_dec k k0).
+    left. subst. reflexivity.
+    right. unfold not. intros. inversion H. contradiction.
+  right. unfold not. intros. inversion H.
+  right. unfold not. intros. inversion H.
+  right. unfold not. intros. inversion H.
+  right. unfold not. intros. inversion H.
+  right. unfold not. intros. inversion H.
+  inversion IHm. subst.
+  
+
+
+  
+  
 Definition is_signed{T:Type}(m:message T)(k:keyType):Prop :=
   match m with
   | (pair m m') => match m' with
