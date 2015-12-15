@@ -200,7 +200,7 @@ Defined.
 Theorem message_eq_dec: forall m m':message, {m=m'}+{m<>m'}.
 Proof.
   intros.
-  induction m; induction m'.
+  induction m,m'.
   destruct (eq_nat_dec n n0).
     left. subst. reflexivity.
     right. unfold not. intros. inversion H. contradiction.
@@ -217,7 +217,7 @@ Proof.
   right. unfold not. intros. inversion H.
   right. unfold not. intros. inversion H.
   right. unfold not. intros. inversion H.
-  inversion IHm. subst.
+  destruct (eq_key_dec k k0)
   
 
 
