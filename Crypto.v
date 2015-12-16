@@ -169,14 +169,6 @@ Eval compute in decrypt(encrypt (basic 1) (symmetric 1)) (symmetric 2).
 Definition sign(m:message)(k:keyType):message :=
   (pair m (encrypt (hash m) k)).
 
-Theorem is_hash(m:message):{exists m':message, m=(hash m')}+{forall m':message, m<>(hash m')}.
-
-Proof.
-  destruct m;
-  try (left; intros; exists m; reflexivity);
-  try (right; intros; unfold not; intros; inversion H).
-Defined.
-
 Theorem eq_key_dec: forall k k':keyType, {k=k'}+{k<>k'}.
 Proof.
   intros.
@@ -255,6 +247,65 @@ Proof.
   right. unfold not. intros. inversion H. contradiction.
 Defined.
 
+Ltac whack_right :=
+  match goal with
+  | [ |- {?P = ?P}+{?Q <> ?Q'} ] => right; unfold not; intros; inversion H
+  | _ |- _
+  end.
+
+Theorem message_eq_dec': forall m m':message, {m=m'}+{m<>m'}.
+Proof.
+  induction m,m'.
+  destruct (eq_nat_dec n n0).
+    left. subst. reflexivity.
+    right. unfold not. intros. inversion H. contradiction.
+  whack_right.
+  right. unfold not. intros. inversion H.
+  right. unfold not. intros. inversion H.
+  right. unfold not. intros. inversion H.
+  right. unfold not. intros. inversion H.
+  right. unfold not. intros. inversion H.
+  destruct (eq_key_dec k k0).
+    left. subst. reflexivity.
+    right. unfold not. intros. inversion H. contradiction.
+  right. unfold not. intros. inversion H.
+  right. unfold not. intros. inversion H.
+  right. unfold not. intros. inversion H.
+  right. unfold not. intros. inversion H.
+  right. unfold not. intros. inversion H.
+  specialize IHm with m'.
+  apply message_eq_lemma. assumption. apply eq_key_dec.
+  right. unfold not. intros. inversion H.
+  right. unfold not. intros. inversion H.
+  right. unfold not. intros. inversion H.
+  right. unfold not. intros. inversion H.
+  right. unfold not. intros. inversion H.
+  specialize IHm with m'.
+  destruct IHm.
+  left. subst. reflexivity.
+  right. unfold not. intros. inversion H. contradiction.
+  right. unfold not. intros. inversion H.
+  right. unfold not. intros. inversion H.
+  right. unfold not. intros. inversion H.
+  right. unfold not. intros. inversion H.
+  right. unfold not. intros. inversion H.
+  specialize IHm1 with m'1.
+  specialize IHm2 with m'2.
+  destruct IHm1; destruct IHm2.
+  subst. left. reflexivity.
+  right. unfold not. intros. inversion H. contradiction.
+  right. unfold not. intros. inversion H. contradiction.
+  right. unfold not. intros. inversion H. contradiction.
+Defined.
+
+Theorem is_hash_dec: forall m h, {h=(hash m)}+{h<>(hash m)}.
+Proof.
+  intros.
+  destruct (message_eq_dec h (hash m)).
+  left. assumption.
+  right. assumption.
+Qed.
+
 Definition is_signed(m:message)(k:keyType):Prop :=
   match m with
   | (pair m m') => match m' with
@@ -307,17 +358,14 @@ Eval compute in check_dec (sign (basic 1) (private 1)) (public 1).
 
 Eval compute in check_dec (sign (basic 1) (private 1)) (public 2).
 
-(** Uncomment these Notation definitions if you would rather use [good] and
-  [bad] while hiding proof values than use [inleft] and [inright].  This
-  enables code that looks like this:
-
-  [if good then ...]
-
 Notation " 'good' " := (left _ _).
 
 Notation " 'bad' " := (right _ _).
 
-Eval compute in check_dec nat (sign nat (basic nat 1) (private 1)) (public 1).
+Eval compute in check_dec (sign (basic 1) (private 1)) (public 1).
 
-Eval compute in check_dec nat (sign nat (basic nat 1) (private 1)) (public 2).
-*)
+Eval compute in check_dec (sign (basic 1) (private 1)) (public 2).
+
+
+
+
