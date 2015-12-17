@@ -249,8 +249,8 @@ Defined.
 
 Ltac whack_right :=
   match goal with
-  | [ |- {?P = ?P}+{?Q <> ?Q'} ] => right; unfold not; intros; inversion H
-  | _ |- _
+  | [ |- {?P = ?Q}+{?P <> ?Q} ] => right; unfold not; intros; inversion H
+  | [ H: ?X |- _ ] => right; unfold not; intros; inversion H
   end.
 
 Theorem message_eq_dec': forall m m':message, {m=m'}+{m<>m'}.
