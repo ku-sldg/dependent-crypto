@@ -249,46 +249,29 @@ Defined.
 
 Ltac whack_right :=
   match goal with
-  | [ |- {?P = ?Q}+{?P <> ?Q} ] => right; unfold not; intros; inversion H
-  | [ H: ?X |- _ ] => right; unfold not; intros; inversion H
+  | [ |- {basic ?P = basic ?Q}+{basic ?P <> basic ?Q} ] => simpl
+  | [ |- {key ?P = key ?Q}+{key ?P <> key ?Q} ] => simpl
+  | [ |- {encrypt ?P ?P' = encrypt ?Q ?Q'}+{encrypt ?P ?P' <> encrypt ?Q ?Q'} ] => simpl
+  | [ |- {hash ?P = hash ?Q}+{hash ?P <> hash ?Q} ] => simpl
+  | [ |- {pair ?P ?P' = pair ?Q ?Q'}+{pair ?P ?P' <> pair ?Q ?Q'} ] => simpl
+  | [ |- _ ] => right; unfold not; intros; inversion H
   end.
 
 Theorem message_eq_dec': forall m m':message, {m=m'}+{m<>m'}.
 Proof.
-  induction m,m'.
+  induction m,m'; whack_right.
   destruct (eq_nat_dec n n0).
     left. subst. reflexivity.
     right. unfold not. intros. inversion H. contradiction.
-  whack_right.
-  right. unfold not. intros. inversion H.
-  right. unfold not. intros. inversion H.
-  right. unfold not. intros. inversion H.
-  right. unfold not. intros. inversion H.
-  right. unfold not. intros. inversion H.
   destruct (eq_key_dec k k0).
     left. subst. reflexivity.
     right. unfold not. intros. inversion H. contradiction.
-  right. unfold not. intros. inversion H.
-  right. unfold not. intros. inversion H.
-  right. unfold not. intros. inversion H.
-  right. unfold not. intros. inversion H.
-  right. unfold not. intros. inversion H.
   specialize IHm with m'.
-  apply message_eq_lemma. assumption. apply eq_key_dec.
-  right. unfold not. intros. inversion H.
-  right. unfold not. intros. inversion H.
-  right. unfold not. intros. inversion H.
-  right. unfold not. intros. inversion H.
-  right. unfold not. intros. inversion H.
+    apply message_eq_lemma. assumption. apply eq_key_dec.
   specialize IHm with m'.
   destruct IHm.
-  left. subst. reflexivity.
-  right. unfold not. intros. inversion H. contradiction.
-  right. unfold not. intros. inversion H.
-  right. unfold not. intros. inversion H.
-  right. unfold not. intros. inversion H.
-  right. unfold not. intros. inversion H.
-  right. unfold not. intros. inversion H.
+    left. subst. reflexivity.
+    right. unfold not. intros. inversion H. contradiction.
   specialize IHm1 with m'1.
   specialize IHm2 with m'2.
   destruct IHm1; destruct IHm2.
