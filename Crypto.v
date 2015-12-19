@@ -247,25 +247,25 @@ Proof.
   right. unfold not. intros. inversion H. contradiction.
 Defined.
 
+Ltac eq_not_eq :=
+  try (left; subst; reflexivity);
+  try (right; unfold not; intros; inversion H; contradiction).
+
 Ltac whack_right :=
   match goal with
-  | [ |- {basic ?P = basic ?Q}+{basic ?P <> basic ?Q} ] => simpl
-  | [ |- {key ?P = key ?Q}+{key ?P <> key ?Q} ] => simpl
-  | [ |- {encrypt ?P ?P' = encrypt ?Q ?Q'}+{encrypt ?P ?P' <> encrypt ?Q ?Q'} ] => simpl
-  | [ |- {hash ?P = hash ?Q}+{hash ?P <> hash ?Q} ] => simpl
-  | [ |- {pair ?P ?P' = pair ?Q ?Q'}+{pair ?P ?P' <> pair ?Q ?Q'} ] => simpl
+  | [ |- {basic ?P = basic ?Q}+{basic ?P <> basic ?Q} ] => destruct (eq_nat_dec P Q);
+      eq_not_eq
+  | [ |- {key ?P = key ?Q}+{key ?P <> key ?Q} ] => destruct (eq_key_dec P Q);
+      eq_not_eq
+  | [ |- {encrypt ?P ?P' = encrypt ?Q ?Q'}+{encrypt ?P ?P' <> encrypt ?Q ?Q'} ] => idtac "encrypt" 
+  | [ |- {hash ?P = hash ?Q}+{hash ?P <> hash ?Q} ] => idtac "hash"
+  | [ |- {pair ?P ?P' = pair ?Q ?Q'}+{pair ?P ?P' <> pair ?Q ?Q'} ] => idtac "pair"
   | [ |- _ ] => right; unfold not; intros; inversion H
   end.
 
 Theorem message_eq_dec': forall m m':message, {m=m'}+{m<>m'}.
 Proof.
   induction m,m'; whack_right.
-  destruct (eq_nat_dec n n0).
-    left. subst. reflexivity.
-    right. unfold not. intros. inversion H. contradiction.
-  destruct (eq_key_dec k k0).
-    left. subst. reflexivity.
-    right. unfold not. intros. inversion H. contradiction.
   specialize IHm with m'.
     apply message_eq_lemma. assumption. apply eq_key_dec.
   specialize IHm with m'.
