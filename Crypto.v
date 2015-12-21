@@ -190,6 +190,8 @@ Proof.
   right. unfold not. intros. inversion H. contradiction.
 Defined.
 
+Hint Resolve eq_key_dec.
+
 Theorem message_eq_lemma: forall m m' k k',
     {m=m'}+{m<>m'} ->
     {k=k'}+{k<>k'} ->
@@ -202,6 +204,8 @@ Proof.
     right. unfold not. intros. inversion H. contradiction.
     right. unfold not. intros. inversion H. contradiction.
 Qed.
+
+Hint Resolve message_eq_lemma.
 
 Theorem message_eq_dec: forall m m':message, {m=m'}+{m<>m'}.
 Proof.
@@ -251,38 +255,34 @@ Ltac eq_not_eq P := destruct P;
   [ (left; subst; reflexivity) | 
     (right; unfold not; intros; inversion H; contradiction) ].
 
-(** Can get rid of hash case with [eq_not_eq] on [IHm]. Need to find [IHm] in
-  the assumption set -- can't reference it in the function directly *)
+Ltac eq_not_eq' P Q := destruct P; destruct Q;
+  [ (subst; left; reflexivity) |
+    (right; unfold not; intros; inversion H; contradiction) |
+    (right; unfold not; intros; inversion H; contradiction) |
+    (right; unfold not; intros; inversion H; contradiction) ].
 
 Ltac whack_right :=
   match goal with
   | [ |- {basic ?P = basic ?Q}+{basic ?P <> basic ?Q} ] => (eq_not_eq (eq_nat_dec P Q))                                                          
   | [ |- {key ?P = key ?Q}+{key ?P <> key ?Q} ] => (eq_not_eq (eq_key_dec P Q))
-  | [ |- {encrypt ?P ?P' = encrypt ?Q ?Q'}+{encrypt ?P ?P' <> encrypt ?Q ?Q'} ] => idtac "encrypt" 
-  | [ |- {hash ?P = hash ?Q}+{hash ?P <> hash ?Q} ] => idtac "hash"
-  | [ |- {pair ?P ?P' = pair ?Q ?Q'}+{pair ?P ?P' <> pair ?Q ?Q'} ] => idtac "pair"
+  | [ |- {encrypt ?P ?P' = encrypt ?Q ?Q'}+{encrypt ?P ?P' <> encrypt ?Q ?Q'} ] => auto 
+  | [ H : {?P = ?Q}+{?P <> ?Q} |- {hash ?P = hash ?Q}+{hash ?P <> hash ?Q} ] => (eq_not_eq H)
+  | [ H1 : {?P = ?P'}+{?P <> ?P'},
+      H2 : {?Q = ?Q'}+{?Q <> ?Q'}
+      |- {pair ?P ?Q = pair ?P' ?Q'}+{pair ?P ?Q <> pair ?P' ?Q'} ] => (eq_not_eq' H1 H2)
   | [ |- _ ] => right; unfold not; intros; inversion H
   end.
 
 Theorem message_eq_dec': forall m m':message, {m=m'}+{m<>m'}.
 Proof.
-  induction m; induction m'; whack_right.
-  specialize IHm with m'.
-     apply message_eq_lemma.
-       assumption.
-       apply eq_key_dec.
-  specialize IHm with m'.
-  destruct IHm.
-    left. subst. reflexivity.
-    right. unfold not. intros. inversion H. contradiction.
-  specialize IHm1 with m'1.
-  specialize IHm2 with m'2.
-  destruct IHm1; destruct IHm2.
-  subst. left. reflexivity.
-  right. unfold not. intros. inversion H. contradiction.
-  right. unfold not. intros. inversion H. contradiction.
-  right. unfold not. intros. inversion H. contradiction.
+  induction m; induction m';
+  try (specialize (IHm m'));
+  try (specialize (IHm1 m'1));
+  try (specialize (IHm2 m'2));
+  whack_right.
 Defined.
+
+Hint Resolve message_eq_dec'.
 
 Theorem is_hash_dec: forall m h, {h=(hash m)}+{h<>(hash m)}.
 Proof.
@@ -290,7 +290,9 @@ Proof.
   destruct (message_eq_dec h (hash m)).
   left. assumption.
   right. assumption.
-Qed.
+Defined.
+
+Hint Resolve is_hash_dec.
 
 Definition is_signed(m:message)(k:keyType):Prop :=
   match m with
