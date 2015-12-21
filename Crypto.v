@@ -20,6 +20,16 @@ Provides definitions for:
 Require Import Omega.
 Require Import Ensembles.
 
+Ltac eq_not_eq P := destruct P;
+  [ (left; subst; reflexivity) | 
+    (right; unfold not; intros; inversion H; contradiction) ].
+
+Ltac eq_not_eq' P Q := destruct P; destruct Q;
+  [ (subst; left; reflexivity) |
+    (right; unfold not; intros; inversion H; contradiction) |
+    (right; unfold not; intros; inversion H; contradiction) |
+    (right; unfold not; intros; inversion H; contradiction) ].
+
 (** Key values will be [nat] *)
 
 Definition key_val : Type := nat.
@@ -41,6 +51,21 @@ match k with
 | private k => public k
 end.
 
+Ltac is_inverse_helper :=
+  match goal with
+  | [ |- {symmetric ?P = (inverse (symmetric ?Q))}+{symmetric ?P <> (inverse (symmetric ?Q))} ] => (eq_not_eq (eq_nat_dec P Q))
+  | [ |- {private ?P = (inverse (public ?Q))}+{private ?P <> (inverse (public ?Q))} ] => (eq_not_eq (eq_nat_dec P Q))
+  | [ |- {public ?P = (inverse (private ?Q))}+{public ?P <> (inverse (private ?Q))} ] => (eq_not_eq (eq_nat_dec P Q))
+  | [ |- _ ] => right; simpl; unfold not; intros; inversion H
+  end.
+
+Theorem is_inverse:forall k k', {k = (inverse k')}+{k <> (inverse k')}.
+Proof.
+  intros.
+  destruct k; destruct k'; is_inverse_helper.
+Defined.
+
+
 (** Proof that inverse is decidable for any two keys. The resulting proof
  gives us the function [is_inverse] that is a decision procedure for key 
  inverse checking.  It will be used in [decrypt] and [check] later in the
@@ -50,18 +75,18 @@ Proof.
   intros.
   destruct k; destruct k'.
   destruct (eq_nat_dec k k0) as [Hinv | Hninv].
-    left. simpl. auto.
+    left. subst. reflexivity.
     right. simpl. unfold not. intros. inversion H. contradiction.
   right; simpl; unfold not; intros; inversion H.
   right. simpl. unfold not. intros. inversion H.
   right. simpl. unfold not. intros. inversion H.
   right. simpl. unfold not. intros. inversion H.
   destruct (eq_nat_dec k k0) as [Hinv | Hninv].
-    left. simpl. auto.
+    left. subst. reflexivity.
     right. simpl. unfold not. intros. inversion H. contradiction.
   right. simpl. unfold not. intros. inversion H.
   destruct (eq_nat_dec k k0) as [Hinv | Hninv].
-    left. simpl. auto.
+    left. subst. reflexivity.
     right. simpl. unfold not. intros. inversion H. contradiction.
   right. simpl. unfold not. intros. inversion H.
 Defined.
@@ -250,16 +275,6 @@ Proof.
   right. unfold not. intros. inversion H. contradiction.
   right. unfold not. intros. inversion H. contradiction.
 Defined.
-
-Ltac eq_not_eq P := destruct P;
-  [ (left; subst; reflexivity) | 
-    (right; unfold not; intros; inversion H; contradiction) ].
-
-Ltac eq_not_eq' P Q := destruct P; destruct Q;
-  [ (subst; left; reflexivity) |
-    (right; unfold not; intros; inversion H; contradiction) |
-    (right; unfold not; intros; inversion H; contradiction) |
-    (right; unfold not; intros; inversion H; contradiction) ].
 
 Ltac whack_right :=
   match goal with
