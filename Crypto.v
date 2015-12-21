@@ -247,16 +247,17 @@ Proof.
   right. unfold not. intros. inversion H. contradiction.
 Defined.
 
-Ltac eq_not_eq :=
-  try (left; subst; reflexivity);
-  try (right; unfold not; intros; inversion H; contradiction).
+Ltac eq_not_eq P := destruct P;
+  [ (left; subst; reflexivity) | 
+    (right; unfold not; intros; inversion H; contradiction) ].
+
+(** Can get rid of hash case with [eq_not_eq] on [IHm]. Need to find [IHm] in
+  the assumption set -- can't reference it in the function directly *)
 
 Ltac whack_right :=
   match goal with
-  | [ |- {basic ?P = basic ?Q}+{basic ?P <> basic ?Q} ] => destruct (eq_nat_dec P Q);
-      eq_not_eq
-  | [ |- {key ?P = key ?Q}+{key ?P <> key ?Q} ] => destruct (eq_key_dec P Q);
-      eq_not_eq
+  | [ |- {basic ?P = basic ?Q}+{basic ?P <> basic ?Q} ] => (eq_not_eq (eq_nat_dec P Q))                                                          
+  | [ |- {key ?P = key ?Q}+{key ?P <> key ?Q} ] => (eq_not_eq (eq_key_dec P Q))
   | [ |- {encrypt ?P ?P' = encrypt ?Q ?Q'}+{encrypt ?P ?P' <> encrypt ?Q ?Q'} ] => idtac "encrypt" 
   | [ |- {hash ?P = hash ?Q}+{hash ?P <> hash ?Q} ] => idtac "hash"
   | [ |- {pair ?P ?P' = pair ?Q ?Q'}+{pair ?P ?P' <> pair ?Q ?Q'} ] => idtac "pair"
@@ -265,9 +266,11 @@ Ltac whack_right :=
 
 Theorem message_eq_dec': forall m m':message, {m=m'}+{m<>m'}.
 Proof.
-  induction m,m'; whack_right.
+  induction m; induction m'; whack_right.
   specialize IHm with m'.
-    apply message_eq_lemma. assumption. apply eq_key_dec.
+     apply message_eq_lemma.
+       assumption.
+       apply eq_key_dec.
   specialize IHm with m'.
   destruct IHm.
     left. subst. reflexivity.
@@ -349,6 +352,29 @@ Eval compute in check_dec (sign (basic 1) (private 1)) (public 1).
 
 Eval compute in check_dec (sign (basic 1) (private 1)) (public 2).
 
+Theorem m2 : forall P Q R: Prop, P -> Q -> R -> Q.
+Proof.
+  intros. match goal with | [ B : _ |- _ ] => exact B end.
+Qed.                                                 
 
+(** [notHyp] determines if [P] is in the assumption set of a proof state.
+  The first match case simply checks to see if [P] matches any assumption and
+  fails if it does.  The second match case grabs everything else.  If [P]
+  is a conjunction, it checks to see if either of its conjuncts is an
+  assumption calling [notHyp] recursively. 
 
+*)
 
+Ltac notHyp P :=
+  match goal with
+  | [ _ : P |- _ ] => fail 1
+  | _ =>
+    match P with
+    | ?P1 /\ ?P2 => first [ notHyp P1 | notHyp P2 | fail 2 ]
+    | _ => idtac
+    end
+  end.
+                           
+Ltac extend pf :=
+  let t := type of pf in
+  notHyp t; generalize pf; intro.
