@@ -203,11 +203,11 @@ Theorem message_eq_lemma: forall m m' k k',
     {(encrypt m k)=(encrypt m' k')}+{(encrypt m k) <> (encrypt m' k')}.
 Proof.
   intros.
-  destruct H; destruct H0.
-    left. subst. reflexivity.
-    right. unfold not. intros. inversion H. contradiction.
-    right. unfold not. intros. inversion H. contradiction.
-    right. unfold not. intros. inversion H. contradiction.
+  destruct H; destruct H0;
+  match goal with
+  | [ |- {encrypt ?m ?k = encrypt ?m' ?k'} + {encrypt ?m ?k <> encrypt ?m' ?k'} ] => left; subst; reflexivity
+  | [ |- _ ] => right; unfold not; intros; inversion H; contradiction
+  end.
 Qed.
 
 Hint Resolve message_eq_lemma.
@@ -321,20 +321,20 @@ Theorem check_dec: forall m:message, forall k, {(is_signed m k)}+{not (is_signed
 Proof.
   intros.
   destruct m.
-  right. unfold not. intros. inversion H.
-  right. unfold not. intros. inversion H.
-  right. unfold not. intros. inversion H.
-  right. unfold not. intros. inversion H.
+  tauto.
+  tauto.
+  tauto.
+  tauto.
   destruct m2.
-    right. unfold not. intros. inversion H.
-    right. unfold not. intros. inversion H.
+    tauto.
+    tauto.
     destruct m2.
-      right. unfold not. intros. inversion H.
-      right. unfold not. intros. inversion H.
-      right. unfold not. intros. inversion H.
+      tauto.
+      tauto.
+      tauto.
       destruct (is_inverse k k0).
         destruct (message_eq_dec m1 m2).
-          left. subst. simpl. tauto.
+        left. subst. simpl. tauto.
           right. unfold not. intros. simpl in H. tauto.
           right. unfold not. intros. simpl in H. tauto.
       tauto.
