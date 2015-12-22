@@ -21,7 +21,7 @@ Require Import Omega.
 Require Import Ensembles.
 
 Ltac eq_not_eq P := destruct P;
-  [ (left; subst; reflexivity) | 
+  [ (left; subst; reflexivity) |
     (right; unfold not; intros; inversion H; contradiction) ].
 
 Ltac eq_not_eq' P Q := destruct P; destruct Q;
@@ -180,10 +180,13 @@ Definition sign(m:message)(k:keyType):message :=
 
 Ltac eq_key_helper :=
   match goal with
-  | [ |- {symmetric ?P = symmetric ?Q} + {symmetric ?P <> symmetric ?Q} ] => (eq_not_eq (eq_nat_dec P Q))
-  | [ |- {public ?P = public ?Q} + {public ?P <> public ?Q} ] => (eq_not_eq (eq_nat_dec P Q))
-  | [ |- {private ?P = private ?Q} + {private ?P <> private ?Q} ] => (eq_not_eq (eq_nat_dec P Q))
-  | [ |- _ ] =>   right; unfold not; intros; inversion H
+  | [ |- {symmetric ?P = symmetric ?Q} + {symmetric ?P <> symmetric ?Q} ] =>
+    (eq_not_eq (eq_nat_dec P Q))
+  | [ |- {public ?P = public ?Q} + {public ?P <> public ?Q} ] =>
+    (eq_not_eq (eq_nat_dec P Q))
+  | [ |- {private ?P = private ?Q} + {private ?P <> private ?Q} ] =>
+    (eq_not_eq (eq_nat_dec P Q))
+  | [ |- _ ] => right; unfold not; intros; inversion H
   end.
 
 Theorem eq_key_dec: forall k k':keyType, {k=k'}+{k<>k'}.
@@ -255,13 +258,18 @@ Defined.
 
 Ltac whack_right :=
   match goal with
-  | [ |- {basic ?P = basic ?Q}+{basic ?P <> basic ?Q} ] => (eq_not_eq (eq_nat_dec P Q))                                                          
-  | [ |- {key ?P = key ?Q}+{key ?P <> key ?Q} ] => (eq_not_eq (eq_key_dec P Q))
-  | [ |- {encrypt ?P ?P' = encrypt ?Q ?Q'}+{encrypt ?P ?P' <> encrypt ?Q ?Q'} ] => auto 
-  | [ H : {?P = ?Q}+{?P <> ?Q} |- {hash ?P = hash ?Q}+{hash ?P <> hash ?Q} ] => (eq_not_eq H)
+  | [ |- {basic ?P = basic ?Q}+{basic ?P <> basic ?Q} ] =>
+    (eq_not_eq (eq_nat_dec P Q))
+  | [ |- {key ?P = key ?Q}+{key ?P <> key ?Q} ] =>
+    (eq_not_eq (eq_key_dec P Q))
+  | [ |- {encrypt ?P ?P' = encrypt ?Q ?Q'}+{encrypt ?P ?P' <> encrypt ?Q ?Q'} ] =>
+    auto 
+  | [ H : {?P = ?Q}+{?P <> ?Q} |- {hash ?P = hash ?Q}+{hash ?P <> hash ?Q} ] =>
+    (eq_not_eq H)
   | [ H1 : {?P = ?P'}+{?P <> ?P'},
       H2 : {?Q = ?Q'}+{?Q <> ?Q'}
-      |- {pair ?P ?Q = pair ?P' ?Q'}+{pair ?P ?Q <> pair ?P' ?Q'} ] => (eq_not_eq' H1 H2)
+      |- {pair ?P ?Q = pair ?P' ?Q'}+{pair ?P ?Q <> pair ?P' ?Q'} ] =>
+    (eq_not_eq' H1 H2)
   | [ |- _ ] => right; unfold not; intros; inversion H
   end.
 
@@ -313,25 +321,25 @@ Theorem check_dec: forall m:message, forall k, {(is_signed m k)}+{not (is_signed
 Proof.
   intros.
   destruct m.
-  right. unfold is_signed. tauto.
-  right. unfold is_signed. tauto.
-  right. unfold is_signed. tauto.
-  right. unfold is_signed. tauto.
+  right. unfold not. intros. inversion H.
+  right. unfold not. intros. inversion H.
+  right. unfold not. intros. inversion H.
+  right. unfold not. intros. inversion H.
   destruct m2.
-    right. unfold not. intros. unfold is_signed in H. tauto.
-    right. unfold not. intros. unfold is_signed in H. tauto.
+    right. unfold not. intros. inversion H.
+    right. unfold not. intros. inversion H.
     destruct m2.
-      right; unfold not; intros; simpl in H; tauto.
-      right; unfold not; intros; simpl in H; tauto.
-      right; unfold not; intros; simpl in H; tauto.
+      right. unfold not. intros. inversion H.
+      right. unfold not. intros. inversion H.
+      right. unfold not. intros. inversion H.
       destruct (is_inverse k k0).
         destruct (message_eq_dec m1 m2).
           left. subst. simpl. tauto.
           right. unfold not. intros. simpl in H. tauto.
-        right. unfold not. intros. simpl in H. tauto.
-      right. unfold not. intros. simpl in H. assumption.
-      right. unfold not. intros. simpl in H. assumption.
-      right. unfold not. intros. simpl in H. assumption.
+          right. unfold not. intros. simpl in H. tauto.
+      tauto.
+      tauto.
+      tauto.
 Defined.
             
 Eval compute in check_dec (sign (basic 1) (private 1)) (public 1).
