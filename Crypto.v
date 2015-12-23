@@ -320,26 +320,14 @@ Qed.
 Theorem check_dec: forall m:message, forall k, {(is_signed m k)}+{not (is_signed m k)}.
 Proof.
   intros.
-  destruct m.
-  tauto.
-  tauto.
-  tauto.
-  tauto.
-  destruct m2.
-    tauto.
-    tauto.
-    destruct m2.
-      tauto.
-      tauto.
-      tauto.
+  destruct m; try tauto.
+  destruct m2; try tauto.
+    destruct m2; try tauto.
       destruct (is_inverse k k0).
-        destruct (message_eq_dec m1 m2).
+        destruct (message_eq_dec m1 m2); try tauto.
         left. subst. simpl. tauto.
           right. unfold not. intros. simpl in H. tauto.
           right. unfold not. intros. simpl in H. tauto.
-      tauto.
-      tauto.
-      tauto.
 Defined.
             
 Eval compute in check_dec (sign (basic 1) (private 1)) (public 1).
