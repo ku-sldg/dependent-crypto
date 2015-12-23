@@ -20,6 +20,9 @@ Provides definitions for:
 Require Import Omega.
 Require Import Ensembles.
 
+(** Ltac helper functions for discharging cases generated from sumbool types
+  using one or two boolean cases. *)
+
 Ltac eq_not_eq P := destruct P;
   [ (left; subst; reflexivity) |
     (right; unfold not; intros; inversion H; contradiction) ].
@@ -30,7 +33,8 @@ Ltac eq_not_eq' P Q := destruct P; destruct Q;
     (right; unfold not; intros; inversion H; contradiction) |
     (right; unfold not; intros; inversion H; contradiction) ].
 
-(** Key values will be [nat] *)
+(** Key values will be [nat] by default.  Could be anything satisfying
+ properties following.  *)
 
 Definition key_val : Type := nat.
 
@@ -115,8 +119,10 @@ Proof.
   auto.
 Qed.
 
-(** Basic messages held abstract.  Compound messages are keys, encrypted and
-  signed messages, hashes and pairs. *) 
+(** Basic messages are natural numbers.  Really should be held abstract, but we
+  need an equality decision procedure to determine message equality.  Compound 
+  messages are keys, encrypted messages, hashes and pairs. Note that signed
+  messages are pairs of a message and encrypted hash. *) 
 
 Inductive message : Type :=
 | basic : nat -> message
@@ -140,8 +146,22 @@ Definition is_decryptable(m:message)(k:keyType):Prop :=
   | _ => False
   end.
 
+(** Prove that is_not_decryptable and is_decryptable are inverses.  This is a
+  bit sloppy.  Should really only have one or the other, but this theorem
+  assures they play together correctly.  Note that it is not installed as
+  a Hint.  *)
+
+Theorem decryptable_inverse: forall m k,
+    (is_not_decryptable m k) <-> (is_decryptable m k) -> False.
+Proof.
+  intros. split.
+  intros; destruct m; try (simpl in H; simpl in H0; contradiction).
+  intros. destruct m; try reflexivity.
+    simpl. simpl in H. unfold not. assumption.
+Qed.
+
 (** [decrypt] returns either a decrypted message or a proof of why the message
-  cannot be decrypted. *)
+  cannot be decrypted.  Really should be able to shorten the proof. *)
 
 Fixpoint decrypt(m:message)(k:keyType):message+{(is_not_decryptable m k)}.
 refine
@@ -212,7 +232,7 @@ Qed.
 
 Hint Resolve message_eq_lemma.
 
-Theorem message_eq_dec: forall m m':message, {m=m'}+{m<>m'}.
+Theorem message_eq_dec_orig: forall m m':message, {m=m'}+{m<>m'}.
 Proof.
   induction m,m'.
   destruct (eq_nat_dec n n0).
@@ -273,7 +293,7 @@ Ltac whack_right :=
   | [ |- _ ] => right; unfold not; intros; inversion H
   end.
 
-Theorem message_eq_dec': forall m m':message, {m=m'}+{m<>m'}.
+Theorem message_eq_dec: forall m m':message, {m=m'}+{m<>m'}.
 Proof.
   induction m; induction m';
   try (specialize (IHm m'));
@@ -282,7 +302,7 @@ Proof.
   whack_right.
 Defined.
 
-Hint Resolve message_eq_dec'.
+Hint Resolve message_eq_dec.
 
 Theorem is_hash_dec: forall m h, {h=(hash m)}+{h<>(hash m)}.
 Proof.
