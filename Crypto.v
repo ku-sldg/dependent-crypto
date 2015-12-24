@@ -366,30 +366,3 @@ Notation " 'bad' " := (right _ _).
 Eval compute in check_dec (sign (basic 1) (private 1)) (public 1).
 
 Eval compute in check_dec (sign (basic 1) (private 1)) (public 2).
-
-Theorem m2 : forall P Q R: Prop, P -> Q -> R -> Q.
-Proof.
-  intros. match goal with | [ B : _ |- _ ] => exact B end.
-Qed.                                                 
-
-(** [notHyp] determines if [P] is in the assumption set of a proof state.
-  The first match case simply checks to see if [P] matches any assumption and
-  fails if it does.  The second match case grabs everything else.  If [P]
-  is a conjunction, it checks to see if either of its conjuncts is an
-  assumption calling [notHyp] recursively. 
-
-*)
-
-Ltac notHyp P :=
-  match goal with
-  | [ _ : P |- _ ] => fail 1
-  | _ =>
-    match P with
-    | ?P1 /\ ?P2 => first [ notHyp P1 | notHyp P2 | fail 2 ]
-    | _ => idtac
-    end
-  end.
-                           
-Ltac extend pf :=
-  let t := type of pf in
-  notHyp t; generalize pf; intro.
