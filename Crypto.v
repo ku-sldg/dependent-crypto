@@ -232,6 +232,11 @@ Qed.
 
 Hint Resolve message_eq_lemma.
 
+(** This is the original statement and proof of the decidability of message
+  equivalence.  The theorem and associated function are no longer used.  It's
+  here for comparison with the current proof of [message_eq_dec] that uses
+  [Ltac] in an attempt to be more efficient and adaptable. *)
+
 Theorem message_eq_dec_orig: forall m m':message, {m=m'}+{m<>m'}.
 Proof.
   induction m,m'.
