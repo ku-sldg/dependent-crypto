@@ -19,6 +19,7 @@ Provides definitions for:
 
 Require Import Omega.
 Require Import Ensembles.
+Require Import CpdtTactics.
 
 (** Ltac helper functions for discharging cases generated from sumbool types
   using one or two boolean cases. *)
@@ -160,7 +161,7 @@ Theorem decryptable_inverse: forall t:type, forall m:(message t), forall k,
     (is_not_decryptable m k) <-> (is_decryptable m k) -> False.
 Proof.
   split. intros. destruct m; simpl in H ; try (assumption).
-  dependent destruction H.
+  dep_destruct H.
   
   destruct m. try (simpl in H; simpl in H0; contradiction).
   intros. destruct m; try reflexivity.
