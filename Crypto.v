@@ -60,18 +60,16 @@ end.
  inverse checking.  It will be used in [decrypt] and [check] later in the
  specification. *)
 
-Ltac is_inverse_helper :=
+Theorem is_inverse:forall k k', {k = (inverse k')}+{k <> (inverse k')}.
+Proof.
+  intros.
+  destruct k; destruct k';
   match goal with
   | [ |- {symmetric ?P = (inverse (symmetric ?Q))}+{symmetric ?P <> (inverse (symmetric ?Q))} ] => (eq_not_eq (eq_nat_dec P Q))
   | [ |- {private ?P = (inverse (public ?Q))}+{private ?P <> (inverse (public ?Q))} ] => (eq_not_eq (eq_nat_dec P Q))
   | [ |- {public ?P = (inverse (private ?Q))}+{public ?P <> (inverse (private ?Q))} ] => (eq_not_eq (eq_nat_dec P Q))
   | [ |- _ ] => right; simpl; unfold not; intros; inversion H
   end.
-
-Theorem is_inverse:forall k k', {k = (inverse k')}+{k <> (inverse k')}.
-Proof.
-  intros.
-  destruct k; destruct k'; is_inverse_helper.
 Defined.
 
 Eval compute in (is_inverse (public 1) (private 1)).
@@ -119,30 +117,37 @@ Proof.
   auto.
 Qed.
 
+Inductive type : Type :=
+| Basic : type
+| Key : type
+| Encrypt : type -> type
+| Hash : type
+| Pair : type -> type -> type.
+
 (** Basic messages are natural numbers.  Really should be held abstract, but we
   need an equality decision procedure to determine message equality.  Compound 
   messages are keys, encrypted messages, hashes and pairs. Note that signed
   messages are pairs of a message and encrypted hash. *) 
 
-Inductive message : Type :=
-| basic : nat -> message
-| key : keyType -> message
-| encrypt : message -> keyType -> message
-| hash : message -> message
-| pair : message -> message -> message.
+Inductive message : type -> Type :=
+| basic : nat -> message Basic
+| key : keyType -> message Key
+| encrypt : forall t, message t -> keyType -> message (Encrypt t)
+| hash : forall t, message t -> message Hash
+| pair : forall t1 t2, message t1 -> message t2 -> message (Pair t1 t2).
 
 (** Predicate that determines if a message cannot be decrypted.  Could be
   that it is not encrypted to begin with or the wrong key is used. *)
 
-Definition is_not_decryptable(m:message)(k:keyType):Prop :=
+Definition is_not_decryptable{t:type}(m:message t)(k:keyType):Prop :=
   match m with
-  | encrypt m' k' => k <> inverse k'
-  | _ => True
+  | encrypt t m' k' => k <> inverse k'
+  | _ => False
   end.
 
-Definition is_decryptable(m:message)(k:keyType):Prop :=
+Definition is_decryptable{t:type}(m:message t)(k:keyType):Prop :=
   match m with
-  | encrypt m' k' => k = inverse k'
+  | encrypt t m' k' => k = inverse k'
   | _ => False
   end.
 
@@ -151,11 +156,13 @@ Definition is_decryptable(m:message)(k:keyType):Prop :=
   assures they play together correctly.  Note that it is not installed as
   a Hint.  *)
 
-Theorem decryptable_inverse: forall m k,
+Theorem decryptable_inverse: forall t:type, forall m:(message t), forall k,
     (is_not_decryptable m k) <-> (is_decryptable m k) -> False.
 Proof.
-  intros. split.
-  intros; destruct m; try (simpl in H; simpl in H0; contradiction).
+  split. intros. destruct m; simpl in H ; try (assumption).
+  dependent destruction H.
+  
+  destruct m. try (simpl in H; simpl in H0; contradiction).
   intros. destruct m; try reflexivity.
     simpl. simpl in H. unfold not. assumption.
 Qed.
