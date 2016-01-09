@@ -233,8 +233,8 @@ Eval compute in decrypt(encrypt Basic (basic 1) (symmetric 1)) (symmetric 2).
 
 (** Generate a signature using encryption and hash *)
 
-Definition sign(m:message)(k:keyType):message :=
-  (pair m (encrypt (hash m) k)).
+Definition sign{t:type}(m:message t)(k:keyType) :=
+  (pair t (Hash t) m (encrypt (hash t m) k)).
 
 Ltac eq_key_helper :=
   match goal with
