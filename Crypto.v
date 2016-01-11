@@ -285,74 +285,11 @@ Proof.
   right; subst; unfold not; intros; inversion H; contradiction.
   right. subst. unfold not. intros. inversion H. apply inj_pair2_eq_dec in H1. contradiction.
   apply eq_type_dec.
-  
-  right. subst. unfold not. intros. inversion H. apply inj_pair2_eq_dec in H1. apply inj_pair2_eq_dec in H3. contradiction.
-  right. subst. unfold not. intros. inversion H. apply inj_pair2_eq_dec in H3. contradiction
-  right. subst. unfold not. intros. apply inj_pair2_eq_dec in H3. contradiction.
-  right. subst. unfold not. intros. apply inj_pair2_eq_dec in H3. contradiction.
-
-Print ex.
-Print sigT.
-Print sig.
-  
-  right. unfold not. intros. inversion H
-  right; unfold not; intros; inversion H; contradiction.
-  match goal with
-  | [ |- {encrypt ?t ?m ?k = encrypt ?t ?m' ?k'} + {encrypt ?t ?m ?k <> encrypt ?t ?m' ?k'} ] => left; subst; reflexivity
-  | [ |- _ ] => right; unfold not; intros; inversion H; contradiction
-  end.
-Qed.
+  right. unfold not. intros. inversion H. apply inj_pair2_eq_dec in H1. contradiction.
+  apply eq_type_dec.
+Defined.
 
 Hint Resolve message_eq_lemma.
-
-(** This is the original statement and proof of the decidability of message
-  equivalence.  The theorem and associated function are no longer used.  It's
-  here for comparison with the current proof of [message_eq_dec] that uses
-  [Ltac] in an attempt to be more efficient and adaptable. *)
-
-Theorem message_eq_dec_orig: forall m m':message, {m=m'}+{m<>m'}.
-Proof.
-  induction m,m'.
-  destruct (eq_nat_dec n n0).
-    left. subst. reflexivity.
-    right. unfold not. intros. inversion H. contradiction.
-  right. unfold not. intros. inversion H.
-  right. unfold not. intros. inversion H.
-  right. unfold not. intros. inversion H.
-  right. unfold not. intros. inversion H.
-  right. unfold not. intros. inversion H.
-  destruct (eq_key_dec k k0).
-    left. subst. reflexivity.
-    right. unfold not. intros. inversion H. contradiction.
-  right. unfold not. intros. inversion H.
-  right. unfold not. intros. inversion H.
-  right. unfold not. intros. inversion H.
-  right. unfold not. intros. inversion H.
-  right. unfold not. intros. inversion H.
-  specialize IHm with m'.
-  apply message_eq_lemma. assumption. apply eq_key_dec.
-  right. unfold not. intros. inversion H.
-  right. unfold not. intros. inversion H.
-  right. unfold not. intros. inversion H.
-  right. unfold not. intros. inversion H.
-  right. unfold not. intros. inversion H.
-  specialize IHm with m'.
-  destruct IHm.
-  left. subst. reflexivity.
-  right. unfold not. intros. inversion H. contradiction.
-  right. unfold not. intros. inversion H.
-  right. unfold not. intros. inversion H.
-  right. unfold not. intros. inversion H.
-  right. unfold not. intros. inversion H.
-  right. unfold not. intros. inversion H.
-  specialize IHm1 with m'1.
-  specialize IHm2 with m'2.
-  destruct IHm1; destruct IHm2.
-  subst. left. reflexivity.
-  right. unfold not. intros. inversion H. contradiction.
-  right. unfold not. intros. inversion H. contradiction.
-  right. unfold not. intros. inversion H. contradiction.
-Defined.
 
 Ltac whack_right :=
   match goal with
@@ -371,8 +308,9 @@ Ltac whack_right :=
   | [ |- _ ] => right; unfold not; intros; inversion H
   end.
 
-Theorem message_eq_dec: forall m m':message, {m=m'}+{m<>m'}.
+Theorem message_eq_dec: forall t, forall m:(message t), forall m':(message t), {m=m'}+{m<>m'}.
 Proof.
+  intros.
   induction m; induction m';
   try (specialize (IHm m'));
   try (specialize (IHm1 m'1));
