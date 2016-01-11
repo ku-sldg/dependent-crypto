@@ -309,6 +309,10 @@ Ltac whack_right :=
   | [ |- _ ] => right; unfold not; intros; inversion H
   end.
 
+Lemma eq_key_k_dec: forall k k':message Key, {k=k'}+{k<>k'}.
+Proof.
+  induction k. intros. apply eq_type_dec.
+  
 Theorem message_eq_dec: forall t, forall m:(message t), forall m':(message t), {m=m'}+{m<>m'}.
 Proof.
   dependent induction m; dependent induction m';
@@ -316,6 +320,10 @@ Proof.
   try (specialize (IHm1 m'1));
   try (specialize (IHm2 m'2));
   whack_right.
+  Restart.
+  dependent induction m. dependent destruction m'.
+  destruct (eq_nat_dec n n0). subst. left; reflexivity. right; unfold not; intros; inversion H. contradiction.
+  intros m. destruct (eq_type_dec (key k) m).
 Defined.
 
 Hint Resolve message_eq_dec.
