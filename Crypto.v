@@ -20,6 +20,8 @@ Provides definitions for:
 Require Import Omega.
 Require Import Ensembles.
 Require Import CpdtTactics.
+Require Import Eqdep_dec.
+Require Import Peano_dec.
 
 (** Ltac helper functions for discharging cases generated from sumbool types
   using one or two boolean cases. *)
@@ -234,7 +236,9 @@ Eval compute in decrypt(encrypt Basic (basic 1) (symmetric 1)) (symmetric 2).
 (** Generate a signature using encryption and hash *)
 
 Definition sign{t:type}(m:message t)(k:keyType) :=
-  (pair t (Hash t) m (encrypt (hash t m) k)).
+  (pair t (Encrypt (Hash t)) m (encrypt (Hash t) (hash t m) k)).
+
+Eval compute in sign (basic 1) (public 1).
 
 Ltac eq_key_helper :=
   match goal with
@@ -255,15 +259,29 @@ Defined.
   
 Hint Resolve eq_key_dec.
 
-Theorem message_eq_lemma: forall m m' k k',
+Theorem message_eq_lemma: forall t, forall m:(message t), forall m':(message t), forall k k',
     {m=m'}+{m<>m'} ->
     {k=k'}+{k<>k'} ->
-    {(encrypt m k)=(encrypt m' k')}+{(encrypt m k) <> (encrypt m' k')}.
+    {(encrypt t m k)=(encrypt t m' k')}+{(encrypt t m k) <> (encrypt t m' k')}.
 Proof.
   intros.
-  destruct H; destruct H0;
+  destruct H; destruct H0.
+  left; subst; reflexivity.
+  right; subst; unfold not; intros; inversion H; contradiction.
+  right. subst. unfold not. intros. inversion H. apply inj_pair2_eq_dec in H1. contradiction.
+  right. subst. unfold not. intros. inversion H. apply inj_pair2_eq_dec in H1. apply inj_pair2_eq_dec in H3. contradiction.
+  right. subst. unfold not. intros. inversion H. apply inj_pair2_eq_dec in H3. contradiction
+  right. subst. unfold not. intros. apply inj_pair2_eq_dec in H3. contradiction.
+  right. subst. unfold not. intros. apply inj_pair2_eq_dec in H3. contradiction.
+
+Print ex.
+Print sigT.
+Print sig.
+  
+  right. unfold not. intros. inversion H
+  right; unfold not; intros; inversion H; contradiction.
   match goal with
-  | [ |- {encrypt ?m ?k = encrypt ?m' ?k'} + {encrypt ?m ?k <> encrypt ?m' ?k'} ] => left; subst; reflexivity
+  | [ |- {encrypt ?t ?m ?k = encrypt ?t ?m' ?k'} + {encrypt ?t ?m ?k <> encrypt ?t ?m' ?k'} ] => left; subst; reflexivity
   | [ |- _ ] => right; unfold not; intros; inversion H; contradiction
   end.
 Qed.
