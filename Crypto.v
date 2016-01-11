@@ -22,6 +22,7 @@ Require Import Ensembles.
 Require Import CpdtTactics.
 Require Import Eqdep_dec.
 Require Import Peano_dec.
+Require Import Coq.Program.Equality.
 
 (** Ltac helper functions for discharging cases generated from sumbool types
   using one or two boolean cases. *)
@@ -310,7 +311,7 @@ Ltac whack_right :=
 
 Theorem message_eq_dec: forall t, forall m:(message t), forall m':(message t), {m=m'}+{m<>m'}.
 Proof.
-  induction m; induction m';
+  dependent induction m; dependent induction m';
   try (specialize (IHm m'));
   try (specialize (IHm1 m'1));
   try (specialize (IHm2 m'2));
@@ -341,7 +342,7 @@ Definition is_signed(m:message)(k:keyType):Prop :=
   | _ => False
   end.
 
-Example sign_1_ex: is_signed (pair (basic 1) (encrypt (hash (basic 1)) (private 1))) (public 1).
+Example sign_1_ex: is_signed (pair (basic 1) (encrypt (hash (basic 1)) (private s1))) (public 1).
 Proof.
   simpl. tauto.
 Qed.
