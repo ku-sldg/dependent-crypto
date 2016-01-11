@@ -311,7 +311,28 @@ Ltac whack_right :=
 
 Theorem message_eq_dec: forall t, forall m:(message t), forall m':(message t), {m=m'}+{m<>m'}.
 Proof.
-  dependent induction m; dependent induction m';
+  dependent induction m; dependent induction m'.
+  destruct (eq_nat_dec n n0). left. subst. reflexivity. right. unfold not. intros. inversion H. contradiction.
+  destruct (eq_key_dec k k0). left. subst. reflexivity. right. unfold not. intros. inversion H. contradiction.
+  try specialize IHm with m'.
+  destruct IHm; destruct (eq_key_dec k k0).
+  left. subst. reflexivity.
+  right. unfold not. intros. inversion H. contradiction.
+  right. unfold not. intros. subst. inversion H. apply inj_pair2_eq_dec in H1.
+  contradiction.
+  apply eq_type_dec.
+  right. unfold not. intros. inversion H. apply inj_pair2_eq_dec in H1. contradiction.
+  apply eq_type_dec.
+  specialize IHm with m'.
+  destruct IHm.
+  left. subst. reflexivity.
+  right. unfold not. intros. inversion H. apply inj_pair2_eq_dec in H1. contradiction.
+  apply eq_type_dec.
+  specialize IHm2 with m'2.
+  specialize IHm1 with m'1.
+  
+
+  
   try (specialize (IHm m'));
   try (specialize (IHm1 m'1));
   try (specialize (IHm2 m'2));
@@ -342,7 +363,7 @@ Definition is_signed(m:message)(k:keyType):Prop :=
   | _ => False
   end.
 
-Example sign_1_ex: is_signed (pair (basic 1) (encrypt (hash (basic 1)) (private s1))) (public 1).
+Example sign_1_ex: is_signed (pair (basic 1) (encrypt (hash (basic 1)) (private sf1))) (public 1).
 Proof.
   simpl. tauto.
 Qed.
