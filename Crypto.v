@@ -310,7 +310,6 @@ Ltac whack_right :=
 
 Theorem message_eq_dec: forall t, forall m:(message t), forall m':(message t), {m=m'}+{m<>m'}.
 Proof.
-  intros.
   induction m; induction m';
   try (specialize (IHm m'));
   try (specialize (IHm1 m'1));
