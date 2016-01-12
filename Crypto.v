@@ -354,21 +354,11 @@ Defined.
 
 Hint Resolve message_eq_dec.
 
-Theorem is_hash_dec: forall m h, {h=(hash m)}+{h<>(hash m)}.
-Proof.
-  intros.
-  destruct (message_eq_dec h (hash m)).
-  left. assumption.
-  right. assumption.
-Defined.
-
-Hint Resolve is_hash_dec.
-
-Definition is_signed(m:message)(k:keyType):Prop :=
+Definition is_signed{t:type}(m:message (Pair t (Encrypt (Hash t))))(k:keyType):Prop :=
   match m with
-  | (pair m m') => match m' with
-                  | encrypt m'' k' =>  match m'' with
-                                      | (hash m''') => m=m''' /\ (k = inverse k')
+  | (pair t t' m m') => match m' with
+                  | encrypt t m'' k' =>  match m'' with
+                                      | (hash t m''') => m=m''' /\ (k = inverse k')
                                       | _ => False
                                       end
                   | _ => False
