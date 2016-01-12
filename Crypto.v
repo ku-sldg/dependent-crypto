@@ -354,16 +354,31 @@ Defined.
 
 Hint Resolve message_eq_dec.
 
+Print encrypt.
+
 Definition is_signed{t:type}(m:message (Pair t (Encrypt (Hash t))))(k:keyType):Prop :=
   match m with
-  | (pair t t' m m') => match m' with
-                  | encrypt t m'' k' =>  match m'' with
-                                      | (hash t m''') => m=m''' /\ (k = inverse k')
-                                      | _ => False
-                                      end
-                  | _ => False
-                  end
+  | pair t t' n n' => n' = sign n k
   | _ => False
+  end.
+  
+  match m with
+  | (pair r (Encrypt (Hash r')) m' m'') => match (decrypt m'' k) with
+                      | inleft (hash r m''') => m'=m'''
+                      | inleft _ => False
+                      | inright _ => False
+                      end
+  | _ => False
+  end.
+
+
+
+    
+  | (pair t t' m m') => match m' with
+                       | encrypt t m'' k' =>  match m'' with
+                                            | (hash t m''') => m=m''' /\ (k = inverse k')
+                                      end
+                  end
   end.
 
 Example sign_1_ex: is_signed (pair (basic 1) (encrypt (hash (basic 1)) (private sf1))) (public 1).
