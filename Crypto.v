@@ -357,7 +357,17 @@ Hint Resolve message_eq_dec.
 Print encrypt.
 
 Definition is_signed{t:type}(m:message (Pair t (Encrypt (Hash t))))(k:keyType):Prop :=
-  match m with
+  match m in (message r) with
+  | pair r1 r2 n n' => match decrypt n' k with
+                                       | inleft m => m = hash _ n
+                                       | _ => False
+                                     end
+  | _ => False
+  end.
+
+
+Definition is_signed{t:type}(m:message (Pair t (Encrypt (Hash t))))(k:keyType):Prop :=
+  match m in (message (Pair t (Encrypt (Hash t)))) return Prop with
   | pair t t' n n' => n' = sign n k
   | _ => False
   end.
