@@ -326,7 +326,9 @@ Theorem message_eq_dec: forall t, forall m:(message t), forall m':(message t), {
 Proof.
   dependent induction m; dependent induction m'.
   (eq_not_eq (eq_nat_dec n n0)).
+  right; unfold not; intros; inversion H.
   (eq_not_eq (eq_key_dec k k0)).
+  right; unfold not; intros; inversion H.
 
   specialize IHm with m'.
   destruct IHm; destruct (eq_key_dec k k0);
@@ -336,13 +338,17 @@ Proof.
     [contradiction | apply eq_type_dec]
   | right; unfold not; intros; inversion H; apply inj_pair2_eq_dec in H1;
     [contradiction | apply eq_type_dec]].
+
+  right; unfold not; intros; inversion H; apply inj_pair2_eq_dec in H1.
   
   specialize IHm with m'.
   destruct IHm;
   [ left; subst; reflexivity 
   | right; unfold not; intros; inversion H; apply inj_pair2_eq_dec in H1;
     [contradiction | apply eq_type_dec]].
-  
+
+  right; unfold not; intros; inversion H; apply inj_pair2_eq_dec in H1.
+
   specialize IHm2 with m'2.
   specialize IHm1 with m'1.
   destruct IHm1; destruct IHm2;
@@ -350,6 +356,14 @@ Proof.
   | right; unfold not; intros; inversion H; apply inj_pair2_eq_dec in H1; apply inj_pair2_eq_dec in H2; [ contradiction | apply eq_type_dec | apply eq_type_dec | apply eq_type_dec ]
   | right; unfold not; intros; inversion H; apply inj_pair2_eq_dec in H1; apply inj_pair2_eq_dec in H2; [ contradiction | apply eq_type_dec | apply eq_type_dec | apply eq_type_dec ]
   | right; unfold not; intros; inversion H; apply inj_pair2_eq_dec in H1; apply inj_pair2_eq_dec in H2; [ contradiction | apply eq_type_dec | apply eq_type_dec | apply eq_type_dec ]].
+
+  right; unfold not; intros; inversion H; apply inj_pair2_eq_dec in H1.
+  right; unfold not; intros; inversion H; apply inj_pair2_eq_dec in H1.
+  right; unfold not; intros; inversion H; apply inj_pair2_eq_dec in H1.
+  right; unfold not; intros; inversion H; apply inj_pair2_eq_dec in H1.
+  right; unfold not; intros; inversion H; apply inj_pair2_eq_dec in H1.
+  right; unfold not; intros; inversion H; apply inj_pair2_eq_dec in H1.
+  left; reflexivity.
 Defined.
   
 Hint Resolve message_eq_dec.
