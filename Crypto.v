@@ -372,16 +372,22 @@ Print encrypt.
 
 Definition signed_message_type{t:type}(m:message (Pair t (Encrypt (Hash t)))):type := t.
   
-
-Definition is_signed{t:type}(m:message (Pair t (Encrypt (Hash t))))(k:keyType):Prop :=
-  match m in (message r) with
-  | pair r1 (Encrypt _) n n' => match decrypt n' k with
-                                       | inleft m' => m' = hash (signed_message_type m) n
-                                       | _ => False
-                                     end
+Definition is_signed{t:type}(m:message (Pair t (Encrypt (Hash t))))(k:keyType):Prop.
+  refine match m in (message r) with
+         | pair r1 (Encrypt (Hash r2)) n n' => if (eq_type_dec r1 r2)
+                                              then match (decrypt n' k) with
+                                                   | inleft _ => True
+                                                   | inright _ => False
+                                                   end
+                                              else False
   | _ => False
   end.
 
+
+match decrypt n' k with
+                                       | inleft m' => m' = hash (signed_message_type m) n
+                                       | _ => False
+                                     end
 
 Definition is_signed{t:type}(m:message (Pair t (Encrypt (Hash t))))(k:keyType):Prop :=
   match m in (message (Pair t (Encrypt (Hash t)))) return Prop with
