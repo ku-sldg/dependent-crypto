@@ -1,5 +1,5 @@
 (** 
-Perfect Crypto - Simple definitions for message encryption and signing using
+Perfect Crypto - Simple definitions for message encryption using
 symmetric and assymetric keys
 
 Perry Alexander
@@ -12,9 +12,6 @@ Provides definitions for:
 - [is_inverse] - proof that [inverse] is decidable and provides a decision procesure for [inverse].
 - [is_not_decryptable] - predicate indicating that a message is or is not decryptable using a specified key.
 - [decrypt] - attempts to decrypt a message with a given key.  Returns the decrypted message if decryption occurs.  Returns a proof that the message cannot be decrypted with the key if decryption does not occur.
-- [is_signed] - proof that signature checking is decidable and provides a decision procedure for signature check.
-- [check] - checks a signature on a message with a given key.  Returns a proof that the check succeeds or does not succeed.
-- [check_dec] - proof that signature checking is decidable and provides a decision procedure for signature checking.  Alternative function for [check].
 *)
 
 Require Import Omega.
@@ -476,3 +473,4 @@ Ltac notHyp P :=
 Ltac extend pf :=
   let t := type of pf in
   notHyp t; generalize pf; intro.
+
