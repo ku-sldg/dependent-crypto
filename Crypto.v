@@ -286,7 +286,7 @@ Proof.
    | subst; right; unfold not; intros; inversion H; contradiction ]
   | [ |- _ ] => right; unfold not; intros; inversion H 
   end.
-  Qed.
+  Defined.
 
 Theorem message_eq_lemma: forall t, forall m:(message t), forall m':(message t), forall k k',
     {m=m'}+{m<>m'} ->
@@ -376,56 +376,18 @@ Definition is_signed{t:type}(m:message (Pair t (Encrypt (Hash t))))(k:keyType):P
   refine match m in (message r) with
          | pair r1 (Encrypt (Hash r2)) n n' => if (eq_type_dec r1 r2)
                                               then match (decrypt n' k) with
-                                                   | inleft _ => True
+                                                   | inleft m' => _
                                                    | inright _ => False
                                                    end
                                               else False
-  | _ => False
-  end.
+         | _ => False
+         end.
+  Proof.
+    subst.
+    apply (if (message_eq_dec _ (hash r2 n) m') then True else False).
+  Defined.
 
-
-match decrypt n' k with
-                                       | inleft m' => m' = hash (signed_message_type m) n
-                                       | _ => False
-                                     end
-
-Definition is_signed{t:type}(m:message (Pair t (Encrypt (Hash t))))(k:keyType):Prop :=
-  match m in (message (Pair t (Encrypt (Hash t)))) return Prop with
-  | pair t t' n n' => n' = sign n k
-  | _ => False
-  end.
-  
-  match m with
-  | (pair r (Encrypt (Hash r')) m' m'') => match (decrypt m'' k) with
-                      | inleft (hash r m''') => m'=m'''
-                      | inleft _ => False
-                      | inright _ => False
-                      end
-  | _ => False
-  end.
-
-
-
-    
-  | (pair t t' m m') => match m' with
-                       | encrypt t m'' k' =>  match m'' with
-                                            | (hash t m''') => m=m''' /\ (k = inverse k')
-                                      end
-                  end
-  end.
-
-Example sign_1_ex: is_signed (pair (basic 1) (encrypt (hash (basic 1)) (private sf1))) (public 1).
-Proof.
-  simpl. tauto.
-Qed.
-
-Example sign_2_ex: not (is_signed (pair (basic 1) (encrypt (hash (basic 1)) (private 1))) (public 2)).
-Proof.
-  unfold not. intros.
-  simpl in H. inversion H. inversion H1.
-Qed.
-
-Theorem check_dec: forall m:message, forall k, {(is_signed m k)}+{not (is_signed m k)}.
+Theorem check_dec: forall t:type, forall m:message (Pair t (Encrypt (Hash t))), forall k, {(is_signed m k)}+{not (is_signed m k)}.
 Proof.
   intros.
   destruct m; try tauto.
@@ -438,6 +400,17 @@ Proof.
           right. unfold not. intros. simpl in H. tauto.
 Defined.
             
+Example sign_1_ex: is_signed (sign (basic 1) (private 1)) (public 1).
+Proof.
+  unfold is_signed. fold (is_signed (t := Basic)). 
+Qed.
+
+Example sign_2_ex: not (is_signed (pair (basic 1) (encrypt (hash (basic 1)) (private 1))) (public 2)).
+Proof.
+  unfold not. intros.
+  simpl in H. inversion H. inversion H1.
+Qed.
+
 Eval compute in check_dec (sign (basic 1) (private 1)) (public 1).
 
 Eval compute in check_dec (sign (basic 1) (private 1)) (public 2).
