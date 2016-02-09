@@ -161,8 +161,31 @@ Definition is_signed{t:type}(m:message (Pair t (Encrypt (Hash t))))(k:keyType):P
     apply (if (message_eq_dec _ (hash r2 n) m') then True else False).
   Defined.
 
-Theorem check_dec: forall t:type, forall m:message (Pair t (Encrypt (Hash t))), forall k, {(is_signed m k)}+{not (is_signed m k)}.
-Proof.
+  Example ex1: is_signed (sign (basic 1) (private 1)) (public 2) -> False.
+  Proof.
+    simpl. tauto.
+  Qed.
+
+  Example ex2: is_signed (sign (basic 1) (symmetric 1)) (public 2) -> False.
+  Proof.
+    simpl. tauto.
+  Qed.
+  
+  Example ex3: is_signed (sign (basic 1) (symmetric 1)) (symmetric 2) -> False.
+  Proof.
+    simpl; tauto.
+  Qed.
+
+  Example ex4: is_signed (sign (basic 1) (symmetric 1)) (symmetric 1).
+  Proof.
+    simpl.
+  Admitted.
+
+  
+  Theorem check_dec: forall t:type, forall m:message (Pair t (Encrypt (Hash t))), forall k, {(is_signed m k)}+{not (is_signed m k)}.
+  Admitted.
+
+  (* Proof.
   intros.
   destruct m; try tauto.
   destruct m2; try tauto.
@@ -172,32 +195,31 @@ Proof.
         left. subst. simpl. tauto.
           right. unfold not. intros. simpl in H. tauto.
           right. unfold not. intros. simpl in H. tauto.
-Defined.
-            
+   *)
+  
 Example sign_1_ex: is_signed (sign (basic 1) (private 1)) (public 1).
 Proof.
-  unfold is_signed. fold (is_signed (t := Basic)). 
-Qed.
+  unfold is_signed. fold (is_signed (t := Basic)).
+Admitted.
 
-Example sign_2_ex: not (is_signed (pair (basic 1) (encrypt (hash (basic 1)) (private 1))) (public 2)).
+Example sign_2_ex: not (is_signed (sign (basic 1) (private 1)) (public 2)).
 Proof.
   unfold not. intros.
-  simpl in H. inversion H. inversion H1.
+  simpl in H. assumption.
 Qed.
 
+(*
 Eval compute in check_dec (sign (basic 1) (private 1)) (public 1).
 
 Eval compute in check_dec (sign (basic 1) (private 1)) (public 2).
+ *)
 
 Notation " 'good' " := (left _ _).
 
 Notation " 'bad' " := (right _ _).
 
+(*
 Eval compute in check_dec (sign (basic 1) (private 1)) (public 1).
 
 Eval compute in check_dec (sign (basic 1) (private 1)) (public 2).
-
-Theorem m2 : forall P Q R: Prop, P -> Q -> R -> Q.
-Proof.
-  intros. match goal with | [ B : _ |- _ ] => exact B end.
-Qed.                                                 
+ *)
