@@ -63,7 +63,7 @@ end.
 
 Theorem is_inverse:forall k k', {k = (inverse k')}+{k <> (inverse k')}.
 Proof.
-  intros.
+  intros;
   destruct k; destruct k';
   match goal with
   | [ |- {symmetric ?P = (inverse (symmetric ?Q))}+{symmetric ?P <> (inverse (symmetric ?Q))} ] => (eq_not_eq (eq_nat_dec P Q))
