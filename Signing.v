@@ -24,7 +24,7 @@ Require Export Crypto.
 (** Generate a signature using encryption and hash *)
 
 Definition sign{t:type}(m:message t)(k:keyType) :=
-  (pair t (Encrypt (Hash t)) m (encrypt (Hash t) (hash t m) k)).
+  (pair t (Encrypt Hash) m (encrypt Hash (hash t m) k)).
 
 Eval compute in sign (basic 1) (public 1).
 
@@ -61,6 +61,31 @@ Proof.
   | [ |- _ ] => right; unfold not; intros; inversion H 
   end.
   Defined.
+
+Theorem hash_eq_dec: forall t1 t2 m1 m2, {hash t1 m1 = hash t2 m2} + {hash t1 m1 <> hash t2 m2}.
+Proof.
+  dependent induction m1; dependent induction m2.
+  eq_not_eq (eq_nat_dec n n0).
+  right. unfold not. intros. inversion H.
+  right. unfold not. intros. inversion H.
+  right. unfold not. intros. inversion H.
+  right. unfold not. intros. inversion H.
+  right. unfold not. intros. inversion H.
+  right. unfold not. intros. inversion H.
+  eq_not_eq (eq_key_dec k k0).
+  right. unfold not. intros. inversion H.
+  right. unfold not. intros. inversion H.
+  right. unfold not. intros. inversion H.
+  right. unfold not. intros. inversion H.
+  right. unfold not. intros. inversion H.
+  right. unfold not. intros. inversion H.
+  
+
+  
+
+ 
+
+
 
 Theorem message_eq_lemma: forall t, forall m:(message t), forall m':(message t), forall k k',
     {m=m'}+{m<>m'} ->
@@ -236,3 +261,5 @@ Eval compute in check_dec (sign (basic 1) (private 1)) (public 1).
 
 Eval compute in check_dec (sign (basic 1) (private 1)) (public 2).
  *)
+
+
