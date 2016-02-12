@@ -122,7 +122,7 @@ Inductive type : Type :=
 | Basic : type
 | Key : type
 | Encrypt : type -> type
-| Hash : type -> type
+| Hash : type
 | Pair : type -> type -> type.
 
 (** Basic messages are natural numbers.  Really should be held abstract, but we
@@ -134,7 +134,7 @@ Inductive message : type -> Type :=
 | basic : nat -> message Basic
 | key : keyType -> message Key
 | encrypt : forall t, message t -> keyType -> message (Encrypt t)
-| hash : forall t, message t -> message (Hash t)
+| hash : forall t, message t -> message Hash
 | pair : forall t1 t2, message t1 -> message t2 -> message (Pair t1 t2)
 | bad : forall t, message t.
 
@@ -265,4 +265,3 @@ Ltac notHyp P :=
 Ltac extend pf :=
   let t := type of pf in
   notHyp t; generalize pf; intro.
-
