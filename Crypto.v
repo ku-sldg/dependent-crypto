@@ -14,6 +14,8 @@ Provides definitions for:
 - [decrypt] - attempts to decrypt a message with a given key.  Returns the decrypted message if decryption occurs.  Returns a proof that the message cannot be decrypted with the key if decryption does not occur.
 *)
 
+Module Crypto.
+
 Require Import Omega.
 Require Import Ensembles.
 Require Import CpdtTactics.
@@ -265,3 +267,5 @@ Ltac notHyp P :=
 Ltac extend pf :=
   let t := type of pf in
   notHyp t; generalize pf; intro.
+
+End Crypto.
