@@ -14,6 +14,8 @@ Depends on:
 - Crypto.v
 *)
 
+Module Signing.
+
 Require Import Omega.
 Require Import CpdtTactics.
 Require Import Eqdep_dec.
@@ -79,12 +81,8 @@ Proof.
   right. unfold not. intros. inversion H.
   right. unfold not. intros. inversion H.
   right. unfold not. intros. inversion H.
-  
-
-  
-
- 
-
+  destruct (eq_type_dec t t0). subst.
+Admitted.
 
 
 Theorem message_eq_lemma: forall t, forall m:(message t), forall m':(message t), forall k k',
@@ -140,11 +138,13 @@ Proof.
 
   right; unfold not; intros; inversion H; apply inj_pair2_eq_dec in H1.
   
+  destruct (eq_type_dec t t0); subst.
   specialize IHm with m'.
   destruct IHm;
   [ left; subst; reflexivity 
   | right; unfold not; intros; inversion H; apply inj_pair2_eq_dec in H1;
     [contradiction | apply eq_type_dec]].
+  right. unfold not. intros. inversion H. contradiction.
 
   right; unfold not; intros; inversion H; apply inj_pair2_eq_dec in H1.
 
@@ -263,3 +263,4 @@ Eval compute in check_dec (sign (basic 1) (private 1)) (public 2).
  *)
 
 
+End Signing.
