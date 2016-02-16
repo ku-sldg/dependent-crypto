@@ -167,25 +167,23 @@ Defined.
   
 Hint Resolve message_eq_dec.
 
-Definition signed_message_type{t:type}(m:message (Pair t (Encrypt (Hash t)))):type := t.
+Definition signed_message_type{t:type}(m:message (Pair t (Encrypt Hash))):type := t.
   
-Definition is_signed{t:type}(m:message (Pair t (Encrypt (Hash t))))(k:keyType):Prop.
-  refine match m in (message r) with
-         | pair r1 (Encrypt (Hash r2)) n n' => if (eq_type_dec r1 r2)
-                                              then match (decrypt n' k) with
-                                                   | inleft m' => _
-                                                   | inright _ => False
-                                                   end
-                                              else False
-         | _ => False
-         end.
-  Proof.
+Definition is_signed{t:type}(m:message (Pair t (Encrypt Hash)))(k:keyType):Prop :=
+  match m in (message r) with
+  | pair r1 (Encrypt Hash) n n' => match (decrypt n' k) with
+                                  | inleft m' => if (message_eq_dec Hash (hash r1 n) m') then True else False
+                                  | inright _ => False
+                                  end
+  | _ => False
+  end.
+
+  (*  Proof.
     subst.
     apply (if (message_eq_dec _ (hash r2 n) m') then True else False).
-  Defined.
+  Defined.*)
 
-  Definition hash_eq{r1 r2:type}(h1:message (Hash r1))(h2:message (Hash r2)):Prop. refine (if (eq_type_dec r1 r2) then True else False).
-
+  (*
 Definition is_signed'{t:type}(m:message (Pair t (Encrypt (Hash t))))(k:keyType):Prop.
   refine match m with
          | pair r1 (Encrypt (Hash r2)) n n' => if (eq_type_dec r1 r2)
@@ -198,7 +196,8 @@ Definition is_signed'{t:type}(m:message (Pair t (Encrypt (Hash t))))(k:keyType):
          end.
   Proof.
   Defined.
-
+   *)
+  
   Example ex1: is_signed (sign (basic 1) (private 1)) (public 2) -> False.
   Proof.
     simpl. tauto.
@@ -214,10 +213,11 @@ Definition is_signed'{t:type}(m:message (Pair t (Encrypt (Hash t))))(k:keyType):
     simpl; tauto.
   Qed.
 
-  Example ex4: is_signed' (sign (basic 1) (symmetric 1)) (symmetric 1).
+  Example ex4: is_signed (sign (basic 1) (symmetric 1)) (symmetric 1).
   Proof.
-    reflexivity.
-  Qed.
+    unfold sign. unfold is_signed. unfold decrypt. unfold is_inverse. fold is_inverse. assert (eq_nat_dec 1 1 = left eq_refl). reflexivity. rewrite H.
+                        
+  Admitted.
 
   
   Theorem check_dec: forall t:type, forall m:message (Pair t (Encrypt (Hash t))), forall k, {(is_signed m k)}+{not (is_signed m k)}.
