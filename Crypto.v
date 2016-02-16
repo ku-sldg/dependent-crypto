@@ -16,6 +16,7 @@ Provides definitions for:
 
 Require Import Omega.
 Require Import Ensembles.
+Add LoadPath "/users/paulkline/Documents/coqs/cpdt/src".
 Require Import CpdtTactics.
 Require Import Eqdep_dec.
 Require Import Peano_dec.
@@ -130,8 +131,47 @@ Inductive type : Type :=
   messages are keys, encrypted messages, hashes and pairs. Note that signed
   messages are pairs of a message and encrypted hash. *) 
 
+Inductive Sendable : Set :=
+| Nat : Sendable
+| Bool : Sendable.
+
+Definition realType (s : Sendable) :=
+match s with
+ | Nat => nat
+ | Bool => bool
+end. 
+
+Require Import Coq.Classes.EquivDec. 
+
+
+Ltac rec_eq :=
+ match goal with
+    | [ x : ?T, y : ?T |- _ ] => 
+       (match T with
+        | nat => generalize nat_eq_eqdec
+        | bool => generalize bool_eqdec
+        | unit => generalize unit_eqdec
+       end) ; 
+       intros X; destruct X with x y as [| paul];
+       try (left; inversion e; subst; reflexivity);
+       try (right; unfold complement in paul; unfold not; 
+            intros Hpaul; apply paul; inversion Hpaul; reflexivity)
+    end.  
+
+Theorem eq_dec_Sendable : forall x y : Sendable,
+  { x = y} + {x <> y}.
+Proof. intros; destruct x, y;
+ try rec_eq;
+ try (left; reflexivity);
+ try ( right; unfold not; intros; inversion H).
+Defined.         
+Theorem eq_dec_realType : forall s : Sendable, forall x y : realType s,
+  { x = y} + {x <> y}. Proof. intros; destruct s.
+   apply eq_nat_dec.
+   apply bool_eqdec.
+Defined.     
 Inductive message : type -> Type :=
-| basic : nat -> message Basic
+| basic {S : Sendable} : realType S -> message Basic
 | key : keyType -> message Key
 | encrypt : forall t, message t -> keyType -> message (Encrypt t)
 | hash : forall t, message t -> message (Hash t)
@@ -176,7 +216,8 @@ Inductive sumor (A : Type) (B : Prop) : Type :=
     inleft : A -> A + {B} | inright : B -> A + {B}
 *)
 
-Theorem is_not_decryptable_basic: forall n k, is_not_decryptable (basic n) k.
+Theorem is_not_decryptable_basic: forall S : Sendable,
+                                  forall n : (realType S), forall k, is_not_decryptable (basic n) k.
 Proof.
   intros.
   reflexivity.
@@ -240,9 +281,10 @@ Defined.
   end).
 *)
 
-Eval compute in decrypt(encrypt Basic (basic 1) (symmetric 1)) (symmetric 1).
+Definition one : realType Nat := 1.  
+Eval compute in decrypt(encrypt Basic (basic one) (symmetric 1)) (symmetric 1).
 
-Eval compute in decrypt(encrypt Basic (basic 1) (symmetric 1)) (symmetric 2).
+Eval compute in decrypt(encrypt Basic (basic one) (symmetric 1)) (symmetric 2).
 
 (** [notHyp] determines if [P] is in the assumption set of a proof state.
   The first match case simply checks to see if [P] matches any assumption and

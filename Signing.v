@@ -15,6 +15,8 @@ Depends on:
 *)
 
 Require Import Omega.
+Add LoadPath "/users/paulkline/Documents/coqs/cpdt/src".
+Add LoadPath "/users/paulkline/Documents/coqs/dependent-crypto". 
 Require Import CpdtTactics.
 Require Import Eqdep_dec.
 Require Import Peano_dec.
@@ -25,8 +27,8 @@ Require Export Crypto.
 
 Definition sign{t:type}(m:message t)(k:keyType) :=
   (pair t (Encrypt (Hash t)) m (encrypt (Hash t) (hash t m) k)).
-
-Eval compute in sign (basic 1) (public 1).
+Definition one : realType Nat := 1. 
+Eval compute in sign (basic one) (public 1).
 
 Ltac eq_key_helper :=
   match goal with
@@ -96,14 +98,44 @@ Ltac whack_right :=
   | [ |- _ ] => right; unfold not; intros; inversion H
   end.
 
+Lemma basic_inv : forall s, forall t t2 : realType s,
+ basic t = basic t2 -> t = t2. Proof. intro. induction s. intro. induction t.
+ intro. destruct t2. reflexivity. intro. Abort.
+
+Add LoadPath "/users/paulkline/Documents/coqs/mysfProgress". 
+Require Import SfLib. 
+Lemma eq_dec_basic : forall s1 s2, forall t : realType s1,
+ forall t2 : realType s2,
+ { basic t = basic t2} +
+ { basic t <> basic t2}.
+Proof. intros;  generalize eq_dec_Sendable. intros Hpaul;
+specialize Hpaul with s1 s2; destruct Hpaul; 
+  [Case "Sendables are equal" ; 
+     subst;generalize eq_dec_realType; intros;specialize H with s2 t2 t; 
+     destruct H; subst;
+     [SCase "the (realType S) instances are equal"; 
+        left; reflexivity
+     |SCase "the (realType S) instances NOT equal"; 
+        right;unfold not; intros; unfold not in n; apply n; inversion H; 
+        apply inj_pair2_eq_dec in H1; subst; trivial;
+        apply eq_dec_Sendable;
+        right; unfold not; intros; inversion H
+     ]
+  |Case "Sendables NOT equal";
+     right; unfold not; intros; inversion H; contradiction
+  ].
+Qed.     
+
+
+
+
 Theorem message_eq_dec: forall t, forall m:(message t), forall m':(message t), {m=m'}+{m<>m'}.
 Proof.
   dependent induction m; dependent induction m'.
-  (eq_not_eq (eq_nat_dec n n0)).
-  right; unfold not; intros; inversion H.
+  apply eq_dec_basic. right. unfold not; intros. inversion H.
+  
   (eq_not_eq (eq_key_dec k k0)).
   right; unfold not; intros; inversion H.
-
   specialize IHm with m'.
   destruct IHm; destruct (eq_key_dec k k0);
   [ left; subst; reflexivity
@@ -161,22 +193,22 @@ Definition is_signed{t:type}(m:message (Pair t (Encrypt (Hash t))))(k:keyType):P
     apply (if (message_eq_dec _ (hash r2 n) m') then True else False).
   Defined.
 
-  Example ex1: is_signed (sign (basic 1) (private 1)) (public 2) -> False.
+  Example ex1: is_signed (sign (basic one) (private 1)) (public 2) -> False.
   Proof.
     simpl. tauto.
   Qed.
 
-  Example ex2: is_signed (sign (basic 1) (symmetric 1)) (public 2) -> False.
+  Example ex2: is_signed (sign (basic one) (symmetric 1)) (public 2) -> False.
   Proof.
     simpl. tauto.
   Qed.
   
-  Example ex3: is_signed (sign (basic 1) (symmetric 1)) (symmetric 2) -> False.
+  Example ex3: is_signed (sign (basic one) (symmetric 1)) (symmetric 2) -> False.
   Proof.
     simpl; tauto.
   Qed.
 
-  Example ex4: is_signed (sign (basic 1) (symmetric 1)) (symmetric 1).
+  Example ex4: is_signed (sign (basic one) (symmetric 1)) (symmetric 1).
   Proof.
     simpl.
   Admitted.
@@ -197,12 +229,12 @@ Definition is_signed{t:type}(m:message (Pair t (Encrypt (Hash t))))(k:keyType):P
           right. unfold not. intros. simpl in H. tauto.
    *)
   
-Example sign_1_ex: is_signed (sign (basic 1) (private 1)) (public 1).
+Example sign_1_ex: is_signed (sign (basic one) (private 1)) (public 1).
 Proof.
   unfold is_signed. fold (is_signed (t := Basic)).
 Admitted.
 
-Example sign_2_ex: not (is_signed (sign (basic 1) (private 1)) (public 2)).
+Example sign_2_ex: not (is_signed (sign (basic one) (private 1)) (public 2)).
 Proof.
   unfold not. intros.
   simpl in H. assumption.
