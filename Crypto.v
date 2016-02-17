@@ -119,8 +119,17 @@ Proof.
   auto.
 Qed.
 
+Inductive Sendable : Set :=
+| Nat : Sendable
+| Bool : Sendable.
+
+Definition realType (s : Sendable) :=
+match s with
+ | Nat => nat
+ | Bool => bool
+end. 
 Inductive type : Type :=
-| Basic : type
+| Basic : Sendable -> type
 | Key : type
 | Encrypt : type -> type
 | Hash : type -> type
@@ -131,15 +140,10 @@ Inductive type : Type :=
   messages are keys, encrypted messages, hashes and pairs. Note that signed
   messages are pairs of a message and encrypted hash. *) 
 
-Inductive Sendable : Set :=
-| Nat : Sendable
-| Bool : Sendable.
+(* 
+Definition SendableT := Set.  *)
 
-Definition realType (s : Sendable) :=
-match s with
- | Nat => nat
- | Bool => bool
-end. 
+
 
 Require Import Coq.Classes.EquivDec. 
 
@@ -171,7 +175,7 @@ Theorem eq_dec_realType : forall s : Sendable, forall x y : realType s,
    apply bool_eqdec.
 Defined.     
 Inductive message : type -> Type :=
-| basic {S : Sendable} : realType S -> message Basic
+| basic {S : Sendable} : realType S -> message (Basic S)
 | key : keyType -> message Key
 | encrypt : forall t, message t -> keyType -> message (Encrypt t)
 | hash : forall t, message t -> message (Hash t)
@@ -282,9 +286,9 @@ Defined.
 *)
 
 Definition one : realType Nat := 1.  
-Eval compute in decrypt(encrypt Basic (basic one) (symmetric 1)) (symmetric 1).
+Eval compute in decrypt(encrypt (Basic Nat) (basic one) (symmetric 1)) (symmetric 1).
 
-Eval compute in decrypt(encrypt Basic (basic one) (symmetric 1)) (symmetric 2).
+Eval compute in decrypt(encrypt (Basic Nat) (basic one) (symmetric 1)) (symmetric 2).
 
 (** [notHyp] determines if [P] is in the assumption set of a proof state.
   The first match case simply checks to see if [P] matches any assumption and
