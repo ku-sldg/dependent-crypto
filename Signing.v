@@ -119,6 +119,65 @@ Ltac whack_right :=
   | [ |- _ ] => right; unfold not; intros; inversion H
   end.
 
+Fixpoint message_eq'{t1 t2:type}(m1:message t1)(m2:message t2):Prop :=
+  if (eq_type_dec t1 t2)
+  then match m1 with
+       | basic x => match m2 with
+                   | basic y => x = y
+                   | _ => False
+                   end
+       | hash _ x => match m2 with
+                    | hash _ y => message_eq' x y
+                    | _ => False
+                    end
+       | key k => match m2 with
+                 | key k' => k = k'
+                 | _ => False
+                 end
+       | encrypt _ m k => match m2 with
+                         | encrypt _ m' k' => message_eq' m m' /\ k = k'
+                         | _ => False
+                         end
+       | pair _ _ p1 p2 => match m2 with
+                          | pair _ _ p1' p2' => message_eq' p1 p1' /\ message_eq' p2 p2'
+                          | _ => False
+                          end
+       | bad _ => match m2 with
+                 | bad _ => True
+                 | _ => False
+                 end
+       end
+  else False.
+
+Theorem message_eq_dec: forall t1 t2, forall m1:(message t1), forall m2:(message t2),
+        {(message_eq' m1 m2)} + {not (message_eq' m1 m2)}.
+Proof.
+  induction m1, m2.
+    match goal with
+    | [  |- {message_eq' (basic ?X) (basic ?Y)} + {~ message_eq' (basic ?X) (basic ?Y)} ] =>
+      (eq_not_eq (eq_nat_dec X Y))
+    | [  |- {message_eq' (basic ?X) (bad ?T)} + {~ message_eq' (basic ?X) (bad ?T)} ] =>
+      (right; unfold not; intros H; unfold message_eq' in H; destruct (eq_type_dec Basic t); [ assumption | assumption ])
+    | [ H: _ |- _ ] => (right; unfold not; intros H; inversion H)
+    end.
+
+  right; unfold not; intros H; inversion H.
+  right; unfold not; intros H; inversion H.
+  right; unfold not; intros H; inversion H.
+  right; unfold not; intros H; inversion H.
+  right. unfold not. intros H. unfold message_eq' in H. destruct (eq_type_dec Basic t). assumption. assumption.
+  right; unfold not; intros H; inversion H.
+  eq_not_eq (eq_key_dec k k0).
+  right; unfold not; intros H; inversion H.
+  right; unfold not; intros H; inversion H.
+  right; unfold not; intros H; inversion H.
+  right. unfold not. intros H. unfold message_eq' in H. destruct (eq_type_dec Key t). assumption. assumption.
+  right; unfold not; intros H; inversion H.
+  right; unfold not; intros H; inversion H.
+  destruct (eq_key_dec k k0), (eq_type_dec t t0); subst.
+Admitted.
+
+(*
 Theorem message_eq_dec: forall t, forall m:(message t), forall m':(message t), {m=m'}+{m<>m'}.
 Proof.
   dependent induction m; dependent induction m'.
@@ -166,38 +225,19 @@ Proof.
 Defined.
   
 Hint Resolve message_eq_dec.
+ *)
 
 Definition signed_message_type{t:type}(m:message (Pair t (Encrypt Hash))):type := t.
-  
+
 Definition is_signed{t:type}(m:message (Pair t (Encrypt Hash)))(k:keyType):Prop :=
   match m in (message r) with
   | pair r1 (Encrypt Hash) n n' => match (decrypt n' k) with
-                                  | inleft m' => if (message_eq_dec Hash (hash r1 n) m') then True else False
+                                  | inleft m' => (message_eq' (hash r1 n) m')
                                   | inright _ => False
                                   end
   | _ => False
   end.
 
-  (*  Proof.
-    subst.
-    apply (if (message_eq_dec _ (hash r2 n) m') then True else False).
-  Defined.*)
-
-  (*
-Definition is_signed'{t:type}(m:message (Pair t (Encrypt (Hash t))))(k:keyType):Prop.
-  refine match m with
-         | pair r1 (Encrypt (Hash r2)) n n' => if (eq_type_dec r1 r2)
-                                              then match (decrypt n' k) with
-                                                   | inleft _ => True
-                                                   | inright _ => False
-                                                   end
-                                              else False
-         | _ => False
-         end.
-  Proof.
-  Defined.
-   *)
-  
   Example ex1: is_signed (sign (basic 1) (private 1)) (public 2) -> False.
   Proof.
     simpl. tauto.
@@ -215,17 +255,18 @@ Definition is_signed'{t:type}(m:message (Pair t (Encrypt (Hash t))))(k:keyType):
 
   Example ex4: is_signed (sign (basic 1) (symmetric 1)) (symmetric 1).
   Proof.
-    unfold sign. unfold is_signed. unfold decrypt. unfold is_inverse. fold is_inverse. assert (eq_nat_dec 1 1 = left eq_refl). reflexivity. rewrite H.
-                        
-  Admitted.
+    simpl. tauto.
+  Qed.
 
+  Example ex5: is_signed (sign (basic 1) (private 1)) (public 1).
+  Proof.
+    simpl. tauto.
+  Qed.
   
-  Theorem check_dec: forall t:type, forall m:message (Pair t (Encrypt (Hash t))), forall k, {(is_signed m k)}+{not (is_signed m k)}.
-  Admitted.
-
-  (* Proof.
-  intros.
-  destruct m; try tauto.
+  Theorem check_dec: forall t:type, forall m:message (Pair t (Encrypt Hash)), forall k, {(is_signed m k)}+{not (is_signed m k)}.
+  Proof. Admitted.
+(*
+  destruct k.
   destruct m2; try tauto.
     destruct m2; try tauto.
       destruct (is_inverse k k0).
@@ -237,13 +278,12 @@ Definition is_signed'{t:type}(m:message (Pair t (Encrypt (Hash t))))(k:keyType):
   
 Example sign_1_ex: is_signed (sign (basic 1) (private 1)) (public 1).
 Proof.
-  unfold is_signed. fold (is_signed (t := Basic)).
-Admitted.
+  reflexivity.
+Qed.
 
 Example sign_2_ex: not (is_signed (sign (basic 1) (private 1)) (public 2)).
 Proof.
-  unfold not. intros.
-  simpl in H. assumption.
+  unfold not; intros. simpl in H. assumption.
 Qed.
 
 (*
@@ -256,11 +296,8 @@ Notation " 'good' " := (left _ _).
 
 Notation " 'bad' " := (right _ _).
 
-(*
-Eval compute in check_dec (sign (basic 1) (private 1)) (public 1).
+Eval compute in is_signed (sign (basic 1) (private 1)) (public 1).
 
-Eval compute in check_dec (sign (basic 1) (private 1)) (public 2).
- *)
-
+Eval compute in is_signed (sign (basic 1) (private 1)) (public 2).
 
 End Signing.
