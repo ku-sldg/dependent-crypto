@@ -53,29 +53,6 @@ Defined.
   
 Hint Resolve eq_key_dec.
 
-Theorem eq_type_dec: forall x y : type, {x = y} + {x <> y}.
-Proof.
-  induction x, y;
-  match goal with
-  | [ |- {?T = ?T} + {?T <> ?T} ] => left; reflexivity
-  | [ |- {?C ?T = ?C ?U} + {?C ?T <> ?C ?U} ] =>
-    specialize IHx with y; destruct IHx;
-      [ left; subst; reflexivity
-      | right; unfold not; intros; inversion H; contradiction ]
-  | [ |- {?C ?T ?U = ?C ?T' ?U'} + {?C ?T ?U <> ?C ?T' ?U'} ] =>
-    specialize IHx1 with y1;
-      specialize IHx2 with y2;
-      destruct IHx1;
-      destruct IHx2; 
-      [ left; subst; reflexivity
-      | subst; right; unfold not; intros; inversion H; contradiction
-      | subst; right; unfold not; intros; inversion H; contradiction
-      | subst; right; unfold not; intros; inversion H; contradiction ]
-  | [ |- _ ] => right; unfold not; intros; inversion H 
-  end.
-Defined.
-
-
 (** [hash_eq_dec] is currently admitted and not usable. *)
 
 Theorem hash_eq_dec: forall t1 t2 m1 m2,
