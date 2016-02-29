@@ -28,9 +28,15 @@ Require Export Crypto.
 Definition sign{t:type}(m:message t)(k:keyType) :=
   (pair t (Encrypt Hash) m (encrypt Hash (hash t m) k)).
 
-Eval compute in sign (basic 1) (public 1).
+Example sign_ex1: sign (basic 1) (public 1) = pair Basic (Encrypt Hash) (basic 1) (encrypt Hash (hash Basic (basic 1)) (public 1)).
+Proof.
+  cbv. reflexivity.
+Qed.
 
-Ltac eq_key_helper :=
+Theorem eq_key_dec: forall k k':keyType, {k=k'}+{k<>k'}.
+Proof.
+  intros.
+  destruct k; destruct k';
   match goal with
   | [ |- {symmetric ?P = symmetric ?Q} + {symmetric ?P <> symmetric ?Q} ] =>
     (eq_not_eq (eq_nat_dec P Q))
@@ -40,11 +46,6 @@ Ltac eq_key_helper :=
     (eq_not_eq (eq_nat_dec P Q))
   | [ |- _ ] => right; unfold not; intros; inversion H
   end.
-
-Theorem eq_key_dec: forall k k':keyType, {k=k'}+{k<>k'}.
-Proof.
-  intros.
-  destruct k; destruct k'; eq_key_helper.
 Defined.
   
 Hint Resolve eq_key_dec.
@@ -62,7 +63,7 @@ Proof.
    | subst; right; unfold not; intros; inversion H; contradiction ]
   | [ |- _ ] => right; unfold not; intros; inversion H 
   end.
-  Defined.
+Defined.
 
 Theorem hash_eq_dec: forall t1 t2 m1 m2, {hash t1 m1 = hash t2 m2} + {hash t1 m1 <> hash t2 m2}.
 Proof.
@@ -83,7 +84,6 @@ Proof.
   right. unfold not. intros. inversion H.
   destruct (eq_type_dec t t0). subst.
 Admitted.
-
 
 Theorem message_eq_lemma: forall t, forall m:(message t), forall m':(message t), forall k k',
     {m=m'}+{m<>m'} ->
@@ -238,7 +238,7 @@ Definition is_signed{t:type}(m:message (Pair t (Encrypt Hash)))(k:keyType):Prop 
   | _ => False
   end.
 
-  Example ex1: is_signed (sign (basic 1) (private 1)) (public 2) -> False.
+Example ex1: is_signed (sign (basic 1) (private 1)) (public 2) -> False.
   Proof.
     simpl. tauto.
   Qed.
