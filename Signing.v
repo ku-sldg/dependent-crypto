@@ -36,23 +36,6 @@ Proof.
   cbv. reflexivity.
 Qed.
 
-Theorem eq_key_dec: forall k k':keyType, {k=k'}+{k<>k'}.
-Proof.
-  intros.
-  destruct k; destruct k';
-  match goal with
-  | [ |- {symmetric ?P = symmetric ?Q} + {symmetric ?P <> symmetric ?Q} ] =>
-    (eq_not_eq (eq_nat_dec P Q))
-  | [ |- {public ?P = public ?Q} + {public ?P <> public ?Q} ] =>
-    (eq_not_eq (eq_nat_dec P Q))
-  | [ |- {private ?P = private ?Q} + {private ?P <> private ?Q} ] =>
-    (eq_not_eq (eq_nat_dec P Q))
-  | [ |- _ ] => right; unfold not; intros; inversion H
-  end.
-Defined.
-  
-Hint Resolve eq_key_dec.
-
 (** [hash_eq_dec] is currently admitted and not usable. *)
 
 Theorem hash_eq_dec: forall t1 t2 m1 m2,

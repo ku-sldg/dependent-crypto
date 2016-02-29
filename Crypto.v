@@ -172,6 +172,21 @@ Proof.
   end.
 Defined.
 
+Theorem eq_key_dec: forall k k':keyType, {k=k'}+{k<>k'}.
+Proof.
+  intros.
+  destruct k; destruct k';
+  match goal with
+  | [ |- {symmetric ?P = symmetric ?Q} + {symmetric ?P <> symmetric ?Q} ] =>
+    (eq_not_eq (eq_nat_dec P Q))
+  | [ |- {public ?P = public ?Q} + {public ?P <> public ?Q} ] =>
+    (eq_not_eq (eq_nat_dec P Q))
+  | [ |- {private ?P = private ?Q} + {private ?P <> private ?Q} ] =>
+    (eq_not_eq (eq_nat_dec P Q))
+  | [ |- _ ] => right; unfold not; intros; inversion H
+  end.
+Defined.
+
 (** Basic messages are natural numbers.  Really should be held abstract, but we
   need an equality decision procedure to determine message equality.  Compound 
   messages are keys, encrypted messages, hashes and pairs. Note that signed
