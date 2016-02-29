@@ -99,7 +99,7 @@ Ltac whack_right :=
   | [ |- _ ] => right; unfold not; intros; inversion H
   end.
 
-Fixpoint message_eq'{t1 t2:type}(m1:message t1)(m2:message t2):Prop :=
+Fixpoint message_eq{t1 t2:type}(m1:message t1)(m2:message t2):Prop :=
   if (eq_type_dec t1 t2)
   then match m1 with
        | basic x => match m2 with
@@ -107,7 +107,7 @@ Fixpoint message_eq'{t1 t2:type}(m1:message t1)(m2:message t2):Prop :=
                    | _ => False
                    end
        | hash _ x => match m2 with
-                    | hash _ y => message_eq' x y
+                    | hash _ y => message_eq x y
                     | _ => False
                     end
        | key k => match m2 with
@@ -115,11 +115,11 @@ Fixpoint message_eq'{t1 t2:type}(m1:message t1)(m2:message t2):Prop :=
                  | _ => False
                  end
        | encrypt _ m k => match m2 with
-                         | encrypt _ m' k' => message_eq' m m' /\ k = k'
+                         | encrypt _ m' k' => message_eq m m' /\ k = k'
                          | _ => False
                          end
        | pair _ _ p1 p2 => match m2 with
-                          | pair _ _ p1' p2' => message_eq' p1 p1' /\ message_eq' p2 p2'
+                          | pair _ _ p1' p2' => message_eq p1 p1' /\ message_eq p2 p2'
                           | _ => False
                           end
        | bad _ => match m2 with
@@ -130,14 +130,14 @@ Fixpoint message_eq'{t1 t2:type}(m1:message t1)(m2:message t2):Prop :=
   else False.
 
 Theorem message_eq_dec: forall t1 t2, forall m1:(message t1), forall m2:(message t2),
-        {(message_eq' m1 m2)} + {not (message_eq' m1 m2)}.
+        {(message_eq m1 m2)} + {not (message_eq m1 m2)}.
 Proof.
   induction m1, m2.
     match goal with
-    | [  |- {message_eq' (basic ?X) (basic ?Y)} + {~ message_eq' (basic ?X) (basic ?Y)} ] =>
+    | [  |- {message_eq (basic ?X) (basic ?Y)} + {~ message_eq (basic ?X) (basic ?Y)} ] =>
       (eq_not_eq (eq_nat_dec X Y))
-    | [  |- {message_eq' (basic ?X) (bad ?T)} + {~ message_eq' (basic ?X) (bad ?T)} ] =>
-      (right; unfold not; intros H; unfold message_eq' in H; destruct (eq_type_dec Basic t); [ assumption | assumption ])
+    | [  |- {message_eq (basic ?X) (bad ?T)} + {~ message_eq (basic ?X) (bad ?T)} ] =>
+      (right; unfold not; intros H; unfold message_eq in H; destruct (eq_type_dec Basic t); [ assumption | assumption ])
     | [ H: _ |- _ ] => (right; unfold not; intros H; inversion H)
     end.
 
@@ -145,13 +145,13 @@ Proof.
   right; unfold not; intros H; inversion H.
   right; unfold not; intros H; inversion H.
   right; unfold not; intros H; inversion H.
-  right. unfold not. intros H. unfold message_eq' in H. destruct (eq_type_dec Basic t). assumption. assumption.
+  right. unfold not. intros H. unfold message_eq in H. destruct (eq_type_dec Basic t). assumption. assumption.
   right; unfold not; intros H; inversion H.
   eq_not_eq (eq_key_dec k k0).
   right; unfold not; intros H; inversion H.
   right; unfold not; intros H; inversion H.
   right; unfold not; intros H; inversion H.
-  right. unfold not. intros H. unfold message_eq' in H. destruct (eq_type_dec Key t). assumption. assumption.
+  right. unfold not. intros H. unfold message_eq in H. destruct (eq_type_dec Key t). assumption. assumption.
   right; unfold not; intros H; inversion H.
   right; unfold not; intros H; inversion H.
   destruct (eq_key_dec k k0), (eq_type_dec t t0); subst.
@@ -212,7 +212,7 @@ Definition signed_message_type{t:type}(m:message (Pair t (Encrypt Hash))):type :
 Definition is_signed{t:type}(m:message (Pair t (Encrypt Hash)))(k:keyType):Prop :=
   match m in (message r) with
   | pair r1 (Encrypt Hash) n n' => match (decrypt n' k) with
-                                  | inleft m' => (message_eq' (hash r1 n) m')
+                                  | inleft m' => (message_eq (hash r1 n) m')
                                   | inright _ => False
                                   end
   | _ => False
