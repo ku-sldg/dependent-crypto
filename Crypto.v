@@ -73,17 +73,27 @@ Proof.
   end.
 Defined.
 
-Eval compute in (is_inverse (public 1) (private 1)).
+Example is_inverse_ex1: if (is_inverse (public 1) (private 1)) then True else False.
+Proof.
+  reflexivity.
+Qed.
 
-Eval compute in (is_inverse (public 1) (private 2)).
+Example is_inverse_ex2: if (is_inverse (public 1) (private 2)) then False else True.
+Proof.
+  reflexivity.
+Qed.
 
-Eval compute in (is_inverse (public 2) (private 1)).
+Example is_inverse_ex3: if (is_inverse (public 2) (private 1)) then False else True.
+Proof. reflexivity. Qed.
 
-Eval compute in (is_inverse (private 1) (public 1)).
+Example is_inverse_ex4: if (is_inverse (private 1) (public 1)) then True else False.
+Proof. reflexivity. Qed.
 
-Eval compute in (is_inverse (symmetric 1) (symmetric 1)).
+Example is_inverse_ex5: if (is_inverse (symmetric 1) (symmetric 1)) then True else False.
+Proof. reflexivity. Qed.
 
-Eval compute in (is_inverse (symmetric 1) (symmetric 2)).
+Example is_inverse_ex6: if (is_inverse (symmetric 1) (symmetric 2)) then False else True.
+Proof. reflexivity. Qed.
 
 (** Various proofs for keys and properties of the inverse operation.  All keys
   must have an inverse.  All keys have a unique inverse.  Equal inverses come
@@ -240,9 +250,17 @@ Defined.
   end).
 *)
 
-Eval compute in decrypt(encrypt Basic (basic 1) (symmetric 1)) (symmetric 1).
+Example decrypt_ex1: decrypt(encrypt Basic (basic 1) (symmetric 1)) (symmetric 1) = inleft (basic 1).
+Proof.
+  cbv. reflexivity.
+Qed.
 
-Eval compute in decrypt(encrypt Basic (basic 1) (symmetric 1)) (symmetric 2).
+Example decrypt_ex2: decrypt(encrypt Basic (basic 1) (symmetric 1)) (symmetric 2) <> inleft (basic 1).
+Proof.
+  cbv. unfold not. intros. inversion H.
+Qed.
+
+(** Tactics from CPDT that are currently unused *)
 
 (** [notHyp] determines if [P] is in the assumption set of a proof state.
   The first match case simply checks to see if [P] matches any assumption and

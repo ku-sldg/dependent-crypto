@@ -5,7 +5,7 @@ Perry Alexander
 The University of Kansas
 
 Provides definitions for:
-- [is_signed] - proof that signature checking is decidable and provides a decision procedure for signature check.
+- [is_signed] - proof that signature checking is decidable and provides a decision procedure for signature check. 
 - [check] - checks a signature on a message with a given key.  Returns a proof that the check succeeds or does not succeed.
 - [check_dec] - proof that signature checking is decidable and provides a decision procedure for signature checking.  Alternative function for [check].
 
@@ -28,7 +28,10 @@ Require Export Crypto.
 Definition sign{t:type}(m:message t)(k:keyType) :=
   (pair t (Encrypt Hash) m (encrypt Hash (hash t m) k)).
 
-Example sign_ex1: sign (basic 1) (public 1) = pair Basic (Encrypt Hash) (basic 1) (encrypt Hash (hash Basic (basic 1)) (public 1)).
+Example sign_ex1:
+  sign (basic 1) (public 1) =
+  pair Basic (Encrypt Hash) (basic 1)
+       (encrypt Hash (hash Basic (basic 1)) (public 1)).
 Proof.
   cbv. reflexivity.
 Qed.
@@ -55,17 +58,28 @@ Proof.
   induction x, y;
   match goal with
   | [ |- {?T = ?T} + {?T <> ?T} ] => left; reflexivity
-  | [ |- {?C ?T = ?C ?U} + {?C ?T <> ?C ?U} ] => specialize IHx with y; destruct IHx; [ left; subst; reflexivity | right; unfold not; intros; inversion H; contradiction ]
-  | [ |- {?C ?T ?U = ?C ?T' ?U'} + {?C ?T ?U <> ?C ?T' ?U'} ] => specialize IHx1 with y1; specialize IHx2 with y2; destruct IHx1; destruct IHx2; 
-  [ left; subst; reflexivity
-   | subst; right; unfold not; intros; inversion H; contradiction
-   | subst; right; unfold not; intros; inversion H; contradiction
-   | subst; right; unfold not; intros; inversion H; contradiction ]
+  | [ |- {?C ?T = ?C ?U} + {?C ?T <> ?C ?U} ] =>
+    specialize IHx with y; destruct IHx;
+      [ left; subst; reflexivity
+      | right; unfold not; intros; inversion H; contradiction ]
+  | [ |- {?C ?T ?U = ?C ?T' ?U'} + {?C ?T ?U <> ?C ?T' ?U'} ] =>
+    specialize IHx1 with y1;
+      specialize IHx2 with y2;
+      destruct IHx1;
+      destruct IHx2; 
+      [ left; subst; reflexivity
+      | subst; right; unfold not; intros; inversion H; contradiction
+      | subst; right; unfold not; intros; inversion H; contradiction
+      | subst; right; unfold not; intros; inversion H; contradiction ]
   | [ |- _ ] => right; unfold not; intros; inversion H 
   end.
 Defined.
 
-Theorem hash_eq_dec: forall t1 t2 m1 m2, {hash t1 m1 = hash t2 m2} + {hash t1 m1 <> hash t2 m2}.
+
+(** [hash_eq_dec] is currently admitted and not usable. *)
+
+Theorem hash_eq_dec: forall t1 t2 m1 m2,
+    {hash t1 m1 = hash t2 m2} + {hash t1 m1 <> hash t2 m2}.
 Proof.
   dependent induction m1; dependent induction m2.
   eq_not_eq (eq_nat_dec n n0).
@@ -85,6 +99,9 @@ Proof.
   destruct (eq_type_dec t t0). subst.
 Admitted.
 
+
+(** [message_eq_lemma] is currently unused. *)
+
 Theorem message_eq_lemma: forall t, forall m:(message t), forall m':(message t), forall k k',
     {m=m'}+{m<>m'} ->
     {k=k'}+{k<>k'} ->
@@ -101,6 +118,9 @@ Proof.
 Defined.
 
 Hint Resolve message_eq_lemma.
+
+(** [whack_right] is an experimental ltac function that was used to prove
+ decidability of message equality.  It is currently unused. *)
 
 Ltac whack_right :=
   match goal with
