@@ -239,30 +239,30 @@ Definition is_signed{t:type}(m:message (Pair t (Encrypt Hash)))(k:keyType):Prop 
   end.
 
 Example ex1: is_signed (sign (basic 1) (private 1)) (public 2) -> False.
-  Proof.
-    simpl. tauto.
-  Qed.
+Proof.
+  simpl. tauto.
+Qed.
 
-  Example ex2: is_signed (sign (basic 1) (symmetric 1)) (public 2) -> False.
-  Proof.
-    simpl. tauto.
-  Qed.
-  
-  Example ex3: is_signed (sign (basic 1) (symmetric 1)) (symmetric 2) -> False.
-  Proof.
-    simpl; tauto.
-  Qed.
+Example ex2: is_signed (sign (basic 1) (symmetric 1)) (public 2) -> False.
+Proof.
+  simpl. tauto.
+Qed.
 
-  Example ex4: is_signed (sign (basic 1) (symmetric 1)) (symmetric 1).
-  Proof.
-    simpl. tauto.
-  Qed.
+Example ex3: is_signed (sign (basic 1) (symmetric 1)) (symmetric 2) -> False.
+Proof.
+  simpl; tauto.
+Qed.
 
-  Example ex5: is_signed (sign (basic 1) (private 1)) (public 1).
-  Proof.
-    simpl. tauto.
-  Qed.
-  
+Example ex4: is_signed (sign (basic 1) (symmetric 1)) (symmetric 1).
+Proof.
+  simpl. tauto.
+Qed.
+
+Example ex5: is_signed (sign (basic 1) (private 1)) (public 1).
+Proof.
+  simpl. tauto.
+Qed.
+
   Theorem check_dec: forall t:type, forall m:message (Pair t (Encrypt Hash)), forall k, {(is_signed m k)}+{not (is_signed m k)}.
   Proof. Admitted.
 (*
@@ -286,18 +286,18 @@ Proof.
   unfold not; intros. simpl in H. assumption.
 Qed.
 
-(*
-Eval compute in check_dec (sign (basic 1) (private 1)) (public 1).
-
-Eval compute in check_dec (sign (basic 1) (private 1)) (public 2).
- *)
-
 Notation " 'good' " := (left _ _).
 
 Notation " 'bad' " := (right _ _).
 
-Eval compute in is_signed (sign (basic 1) (private 1)) (public 1).
+Example is_signed_ex1: is_signed (sign (basic 1) (private 1)) (public 1).
+Proof.
+  cbv. reflexivity.
+Qed.
 
-Eval compute in is_signed (sign (basic 1) (private 1)) (public 2).
+Example is_signed_ex2: is_signed (sign (basic 1) (private 1)) (public 2) -> False.
+Proof.
+  cbv. tauto.
+Qed.
 
 End Signing.
