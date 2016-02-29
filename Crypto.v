@@ -73,27 +73,33 @@ Proof.
   end.
 Defined.
 
-Example is_inverse_ex1: if (is_inverse (public 1) (private 1)) then True else False.
+Example is_inverse_ex1: forall n, if (is_inverse (public n) (private n)) then True else False.
 Proof.
-  reflexivity.
+  intros; destruct (is_inverse (public n) (private n));
+  [ trivial | 
+    unfold not in n0; unfold inverse in n0; apply n0; reflexivity ].
 Qed.
 
-Example is_inverse_ex2: if (is_inverse (public 1) (private 2)) then False else True.
+Example is_inverse_ex2: forall n m, n<>m -> if (is_inverse (public n) (private m)) then False else True.
 Proof.
-  reflexivity.
+  intros; destruct (is_inverse (public n) (private m));
+  trivial.
+  unfold inverse in e; unfold inverse in e; inversion e; contradiction.
+Qed.
+  
+Example is_inverse_ex3: forall n m, n=m -> if (is_inverse (symmetric m) (symmetric n)) then True else False.
+Proof.
+  intros; destruct (is_inverse (symmetric m) (symmetric n));
+    trivial.
+  subst. unfold not in n0. simpl in n0. apply n0. reflexivity.
 Qed.
 
-Example is_inverse_ex3: if (is_inverse (public 2) (private 1)) then False else True.
-Proof. reflexivity. Qed.
-
-Example is_inverse_ex4: if (is_inverse (private 1) (public 1)) then True else False.
-Proof. reflexivity. Qed.
-
-Example is_inverse_ex5: if (is_inverse (symmetric 1) (symmetric 1)) then True else False.
-Proof. reflexivity. Qed.
-
-Example is_inverse_ex6: if (is_inverse (symmetric 1) (symmetric 2)) then False else True.
-Proof. reflexivity. Qed.
+Example is_inverse_ex4: forall n m, n<>m -> if (is_inverse (symmetric m) (symmetric n)) then False else True.
+Proof.
+  intros; destruct (is_inverse (symmetric m) (symmetric n));
+    trivial.
+  unfold inverse in e; inversion e. symmetry in H1. contradiction.
+Qed.
 
 (** Various proofs for keys and properties of the inverse operation.  All keys
   must have an inverse.  All keys have a unique inverse.  Equal inverses come
