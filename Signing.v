@@ -132,29 +132,18 @@ Fixpoint message_eq{t1 t2:type}(m1:message t1)(m2:message t2):Prop :=
 Theorem message_eq_dec: forall t1 t2, forall m1:(message t1), forall m2:(message t2),
         {(message_eq m1 m2)} + {not (message_eq m1 m2)}.
 Proof.
-  induction m1, m2.
+  dependent induction m1; dependent induction m2;
     match goal with
     | [  |- {message_eq (basic ?X) (basic ?Y)} + {~ message_eq (basic ?X) (basic ?Y)} ] =>
       (eq_not_eq (eq_nat_dec X Y))
     | [  |- {message_eq (basic ?X) (bad ?T)} + {~ message_eq (basic ?X) (bad ?T)} ] =>
       (right; unfold not; intros H; unfold message_eq in H; destruct (eq_type_dec Basic t); [ assumption | assumption ])
-    | [ H: _ |- _ ] => (right; unfold not; intros H; inversion H)
+    | [  |- {message_eq (key ?X) (key ?Y)} + {~ message_eq (key ?X) (key ?Y)} ] => destruct (eq_key_dec k k0); [ left; subst; reflexivity | right; unfold not; intros; simpl in H; contradiction ]
+    | [  |- {message_eq (key ?X) (bad ?T)} + {~ message_eq (key ?X) (bad ?T)} ] =>  right; unfold not; intros H; unfold message_eq in H; destruct t; try (simpl in H; tauto)
+    | [ J: _ |- _ ] => try tauto (* right; unfold not; intros H; inversion H*)
     end.
-
-  right; unfold not; intros H; inversion H.
-  right; unfold not; intros H; inversion H.
-  right; unfold not; intros H; inversion H.
-  right; unfold not; intros H; inversion H.
-  right. unfold not. intros H. unfold message_eq in H. destruct (eq_type_dec Basic t). assumption. assumption.
-  right; unfold not; intros H; inversion H.
-  eq_not_eq (eq_key_dec k k0).
-  right; unfold not; intros H; inversion H.
-  right; unfold not; intros H; inversion H.
-  right; unfold not; intros H; inversion H.
-  right. unfold not. intros H. unfold message_eq in H. destruct (eq_type_dec Key t). assumption. assumption.
-  right; unfold not; intros H; inversion H.
-  right; unfold not; intros H; inversion H.
-  destruct (eq_key_dec k k0), (eq_type_dec t t0); subst.
+  specialize IHm1 with (encrypt t0 m2 k0).
+  destruct IHm1.
 Admitted.
 
 (*
