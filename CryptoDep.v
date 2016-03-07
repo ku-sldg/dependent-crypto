@@ -137,6 +137,41 @@ Proof.
   auto.
 Qed.
 
+(** Index type values for crypto functions.  Each type corresponds to a basic
+  type or the application of a crypto operation. *)
+
+Inductive type : Type :=
+| Basic : type
+| Key : type
+| Encrypt : type -> type
+| Hash : type
+| Pair : type -> type -> type.
+
+(** [type] equivalence is decidable.  Should eventually use the built-in
+  coq function rather than do this proof. *)
+
+Theorem eq_type_dec: forall x y : type, {x = y} + {x <> y}.
+Proof.
+  induction x, y;
+  match goal with
+  | [ |- {?T = ?T} + {?T <> ?T} ] => left; reflexivity
+  | [ |- {?C ?T = ?C ?U} + {?C ?T <> ?C ?U} ] =>
+    specialize IHx with y; destruct IHx;
+      [ left; subst; reflexivity
+      | right; unfold not; intros; inversion H; contradiction ]
+  | [ |- {?C ?T ?U = ?C ?T' ?U'} + {?C ?T ?U <> ?C ?T' ?U'} ] =>
+    specialize IHx1 with y1;
+      specialize IHx2 with y2;
+      destruct IHx1;
+      destruct IHx2; 
+      [ left; subst; reflexivity
+      | subst; right; unfold not; intros; inversion H; contradiction
+      | subst; right; unfold not; intros; inversion H; contradiction
+      | subst; right; unfold not; intros; inversion H; contradiction ]
+  | [ |- _ ] => right; unfold not; intros; inversion H 
+  end.
+Defined.
+
 Theorem eq_key_dec: forall k k':keyType, {k=k'}+{k<>k'}.
 Proof.
   intros.
@@ -157,13 +192,13 @@ Defined.
   messages are keys, encrypted messages, hashes and pairs. Note that signed
   messages are pairs of a message and encrypted hash. *) 
 
-Inductive message : Type :=
-| basic : nat -> message
-| key : keyType -> message
-| encrypt : message -> keyType -> message
-| hash : message -> message
-| pair : message -> message -> message
-| bad : message.
+Inductive message : type -> Type :=
+| basic : nat -> message Basic
+| key : keyType -> message Key
+| encrypt : forall t, message t -> keyType -> message (Encrypt t)
+| hash : forall t, message t -> message Hash
+| pair : forall t1 t2, message t1 -> message t2 -> message (Pair t1 t2)
+| bad : forall t, message t.
 
 (** Predicate that determines if a message cannot be decrypted.  Could be
   that it is not encrypted to begin with or the wrong key is used. *)
