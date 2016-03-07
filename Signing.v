@@ -21,63 +21,22 @@ Require Import CpdtTactics.
 Require Import Eqdep_dec.
 Require Import Peano_dec.
 Require Import Coq.Program.Equality.
-Require Export CryptoDep.
+Require Export Crypto.
 
 (** Generate a signature using encryption and hash *)
 
-Definition sign{t:type}(m:message t)(k:keyType) :=
-  (pair t (Encrypt Hash) m (encrypt Hash (hash t m) k)).
+Definition sign(m:message)(k:keyType) :=
+  (pair m (encrypt (hash m) k)).
 
 Example sign_ex1:
   sign (basic 1) (public 1) =
-  pair Basic (Encrypt Hash) (basic 1)
-       (encrypt Hash (hash Basic (basic 1)) (public 1)).
+  pair (basic 1)
+       (encrypt (hash (basic 1)) (public 1)).
 Proof.
   cbv. reflexivity.
 Qed.
 
-(** [hash_eq_dec] is currently admitted and not usable. *)
-
-Theorem hash_eq_dec: forall t1 t2 m1 m2,
-    {hash t1 m1 = hash t2 m2} + {hash t1 m1 <> hash t2 m2}.
-Proof.
-  dependent induction m1; dependent induction m2.
-  eq_not_eq (eq_nat_dec n n0).
-  right. unfold not. intros. inversion H.
-  right. unfold not. intros. inversion H.
-  right. unfold not. intros. inversion H.
-  right. unfold not. intros. inversion H.
-  right. unfold not. intros. inversion H.
-  right. unfold not. intros. inversion H.
-  eq_not_eq (eq_key_dec k k0).
-  right. unfold not. intros. inversion H.
-  right. unfold not. intros. inversion H.
-  right. unfold not. intros. inversion H.
-  right. unfold not. intros. inversion H.
-  right. unfold not. intros. inversion H.
-  right. unfold not. intros. inversion H.
-  destruct (eq_type_dec t t0). subst.
-Admitted.
-
-
 (** [message_eq_lemma] is currently unused. *)
-
-Theorem message_eq_lemma: forall t, forall m:(message t), forall m':(message t), forall k k',
-    {m=m'}+{m<>m'} ->
-    {k=k'}+{k<>k'} ->
-    {(encrypt t m k)=(encrypt t m' k')}+{(encrypt t m k) <> (encrypt t m' k')}.
-Proof.
-  intros.
-  destruct H; destruct H0.
-  left; subst; reflexivity.
-  right; subst; unfold not; intros; inversion H; contradiction.
-  right. subst. unfold not. intros. inversion H. apply inj_pair2_eq_dec in H1. contradiction.
-  apply eq_type_dec.
-  right. unfold not. intros. inversion H. apply inj_pair2_eq_dec in H1. contradiction.
-  apply eq_type_dec.
-Defined.
-
-Hint Resolve message_eq_lemma.
 
 (** [whack_right] is an experimental ltac function that was used to prove
  decidability of message equality.  It is currently unused. *)
@@ -99,52 +58,56 @@ Ltac whack_right :=
   | [ |- _ ] => right; unfold not; intros; inversion H
   end.
 
-Fixpoint message_eq{t1 t2:type}(m1:message t1)(m2:message t2):Prop :=
-  if (eq_type_dec t1 t2)
-  then match m1 with
-       | basic x => match m2 with
-                   | basic y => x = y
-                   | _ => False
-                   end
-       | hash _ x => match m2 with
-                    | hash _ y => message_eq x y
-                    | _ => False
-                    end
-       | key k => match m2 with
-                 | key k' => k = k'
+Fixpoint message_eq(m1 m2:message):Prop :=
+  match m1 with
+  | basic x => match m2 with
+              | basic y => x = y
+              | _ => False
+              end
+  | hash x => match m2 with
+             | hash y => message_eq x y
+             | _ => False
+             end
+  | key k => match m2 with
+            | key k' => k = k'
+            | _ => False
+            end
+  | encrypt m k => match m2 with
+                  | encrypt m' k' => message_eq m m' /\ k = k'
+                  | _ => False
+                  end
+  | pair p1 p2 => match m2 with
+                 | pair p1' p2' => message_eq p1 p1' /\ message_eq p2 p2'
                  | _ => False
                  end
-       | encrypt _ m k => match m2 with
-                         | encrypt _ m' k' => message_eq m m' /\ k = k'
-                         | _ => False
-                         end
-       | pair _ _ p1 p2 => match m2 with
-                          | pair _ _ p1' p2' => message_eq p1 p1' /\ message_eq p2 p2'
-                          | _ => False
-                          end
-       | bad _ => match m2 with
-                 | bad _ => True
-                 | _ => False
-                 end
-       end
-  else False.
+  | bad => match m2 with
+          | bad => True
+          | _ => False
+          end
+  end.
 
-Theorem message_eq_dec: forall t1 t2, forall m1:(message t1), forall m2:(message t2),
-        {(message_eq m1 m2)} + {not (message_eq m1 m2)}.
+Theorem message_eq_dec: forall m1 m2:(message),
+    {(message_eq m1 m2)} + {not (message_eq m1 m2)}.
 Proof.
-  dependent induction m1; dependent induction m2;
-    match goal with
-    | [  |- {message_eq (basic ?X) (basic ?Y)} + {~ message_eq (basic ?X) (basic ?Y)} ] =>
+  induction m1; induction m2;
+  match goal with
+    | [ |- {message_eq (basic ?X) (basic ?Y)} + {~ message_eq (basic ?X) (basic ?Y)} ] =>
       (eq_not_eq (eq_nat_dec X Y))
-    | [  |- {message_eq (basic ?X) (bad ?T)} + {~ message_eq (basic ?X) (bad ?T)} ] =>
-      (right; unfold not; intros H; unfold message_eq in H; destruct (eq_type_dec Basic t); [ assumption | assumption ])
-    | [  |- {message_eq (key ?X) (key ?Y)} + {~ message_eq (key ?X) (key ?Y)} ] => destruct (eq_key_dec k k0); [ left; subst; reflexivity | right; unfold not; intros; simpl in H; contradiction ]
-    | [  |- {message_eq (key ?X) (bad ?T)} + {~ message_eq (key ?X) (bad ?T)} ] =>  right; unfold not; intros H; unfold message_eq in H; destruct t; try (simpl in H; tauto)
-    | [ J: _ |- _ ] => try tauto (* right; unfold not; intros H; inversion H*)
-    end.
+    | [ |- {message_eq (key ?X) (key ?Y)} + {~ message_eq (key ?X) (key ?Y)} ] => destruct (eq_key_dec k k0); [ left; subst; reflexivity | right; unfold not; intros; simpl in H; contradiction ]
+    | [ |- {message_eq (encrypt ?M1 ?K) (encrypt ?M2 ?K0)} +
+   {~ message_eq (encrypt ?M1 ?K) (encrypt ?M2 ?K0)} ] => try tauto
+    | [ |- _ ] => try tauto (* right; unfold not; intros H; inversion H*)
+  end.
+  destruct (eq_key_dec k k0); specialize IHm1 with m2. subst. destruct IHm1.
+  left. simpl. tauto.
+  right. unfold not. intros. inversion H. contradiction.
+  right. unfold not. intros. inversion H. contradiction.
+  specialize IHm1 with m2. destruct IHm1. left. simpl. tauto.
+  right. unfold not. intros. simpl in H. contradiction.
+  
   specialize IHm1 with (encrypt t0 m2 k0).
   destruct IHm1.
-Admitted.
+
 
 (*
 Theorem message_eq_dec: forall t, forall m:(message t), forall m':(message t), {m=m'}+{m<>m'}.
