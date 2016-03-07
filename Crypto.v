@@ -168,15 +168,15 @@ Inductive message : Type :=
 (** Predicate that determines if a message cannot be decrypted.  Could be
   that it is not encrypted to begin with or the wrong key is used. *)
 
-Definition is_not_decryptable{t:type}(m:message t)(k:keyType):Prop :=
+Definition is_not_decryptable(m:message)(k:keyType):Prop :=
   match m with
-  | encrypt t m' k' => k <> inverse k'
+  | encrypt m' k' => k <> inverse k'
   | _ => True
   end.
 
-Definition is_decryptable{t:type}(m:message t)(k:keyType):Prop :=
+Definition is_decryptable(m:message)(k:keyType):Prop :=
   match m with
-  | encrypt t m' k' => k = inverse k'
+  | encrypt m' k' => k = inverse k'
   | _ => False
   end.
 
@@ -185,7 +185,7 @@ Definition is_decryptable{t:type}(m:message t)(k:keyType):Prop :=
   assures they play together correctly.  Note that it is not installed as
   a Hint.  *)
 
-Theorem decryptable_inverse: forall t:type, forall m:(message t), forall k,
+Theorem decryptable_inverse: forall m:message, forall k,
     (is_not_decryptable m k) <-> not (is_decryptable m k).
 Proof.
   intros.
@@ -195,26 +195,18 @@ Proof.
   simpl. tauto.
 Qed.  
 
-(** Type-level function to determine the type of a decrypted thing. *)
-
-Definition decrypt_type(t:type):type :=
-  match t with
-  | Encrypt t' => t'
-  | _ => t
-  end.
-
 (** [decrypt] returns either a decrypted message or a proof of why the message
   cannot be decrypted.  Really should be able to shorten the proof. *)
 
                  
-Fixpoint decrypt{t:type}(m:message (Encrypt t))(k:keyType):message t+{(is_not_decryptable m k)}.
-  refine match m in message t' return message (decrypt_type t') + {(is_not_decryptable m k)} with
+Fixpoint decrypt(m:message )(k:keyType):message+{(is_not_decryptable m k)}.
+  refine match m in message return message + {(is_not_decryptable m k)} with
          | basic _ => inright _ _
          | key _ => inright _ _
-         | encrypt t m' j => (if (is_inverse k j) then (inleft _ m') else (inright _ _ ))
-         | hash _ _ => inright _ _
-         | pair _ _ _ _ => inright _ _
-         | bad _ => inright _ _
+         | encrypt m' j => (if (is_inverse k j) then (inleft _ m') else (inright _ _ ))
+         | hash _ => inright _ _
+         | pair _ _ => inright _ _
+         | bad => inright _ _
          end.
 Proof.
   reflexivity.
@@ -225,12 +217,12 @@ Proof.
   reflexivity.
 Defined.
 
-Example decrypt_ex1: decrypt(encrypt Basic (basic 1) (symmetric 1)) (symmetric 1) = inleft (basic 1).
+Example decrypt_ex1: decrypt(encrypt (basic 1) (symmetric 1)) (symmetric 1) = inleft (basic 1).
 Proof.
   cbv. reflexivity.
 Qed.
 
-Example decrypt_ex2: decrypt(encrypt Basic (basic 1) (symmetric 1)) (symmetric 2) <> inleft (basic 1).
+Example decrypt_ex2: decrypt(encrypt (basic 1) (symmetric 1)) (symmetric 2) <> inleft (basic 1).
 Proof.
   cbv. unfold not. intros. inversion H.
 Qed.
