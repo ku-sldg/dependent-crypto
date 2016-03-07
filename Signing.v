@@ -114,65 +114,15 @@ Proof.
   right. unfold not. intros. simpl in H.  destruct H; contradiction.
   left. reflexivity.
 Defined.
-  
-(*
-Theorem message_eq_dec: forall t, forall m:(message t), forall m':(message t), {m=m'}+{m<>m'}.
-Proof.
-  dependent induction m; dependent induction m'.
-  (eq_not_eq (eq_nat_dec n n0)).
-  right; unfold not; intros; inversion H.
-  (eq_not_eq (eq_key_dec k k0)).
-  right; unfold not; intros; inversion H.
 
-  specialize IHm with m'.
-  destruct IHm; destruct (eq_key_dec k k0);
-  [ left; subst; reflexivity
-  | right; unfold not; intros; inversion H; contradiction
-  | right; unfold not; intros; inversion H; apply inj_pair2_eq_dec in H1;
-    [contradiction | apply eq_type_dec]
-  | right; unfold not; intros; inversion H; apply inj_pair2_eq_dec in H1;
-    [contradiction | apply eq_type_dec]].
-
-  right; unfold not; intros; inversion H; apply inj_pair2_eq_dec in H1.
-  
-  destruct (eq_type_dec t t0); subst.
-  specialize IHm with m'.
-  destruct IHm;
-  [ left; subst; reflexivity 
-  | right; unfold not; intros; inversion H; apply inj_pair2_eq_dec in H1;
-    [contradiction | apply eq_type_dec]].
-  right. unfold not. intros. inversion H. contradiction.
-
-  right; unfold not; intros; inversion H; apply inj_pair2_eq_dec in H1.
-
-  specialize IHm2 with m'2.
-  specialize IHm1 with m'1.
-  destruct IHm1; destruct IHm2;
-  [ left; subst; reflexivity 
-  | right; unfold not; intros; inversion H; apply inj_pair2_eq_dec in H1; apply inj_pair2_eq_dec in H2; [ contradiction | apply eq_type_dec | apply eq_type_dec | apply eq_type_dec ]
-  | right; unfold not; intros; inversion H; apply inj_pair2_eq_dec in H1; apply inj_pair2_eq_dec in H2; [ contradiction | apply eq_type_dec | apply eq_type_dec | apply eq_type_dec ]
-  | right; unfold not; intros; inversion H; apply inj_pair2_eq_dec in H1; apply inj_pair2_eq_dec in H2; [ contradiction | apply eq_type_dec | apply eq_type_dec | apply eq_type_dec ]].
-
-  right; unfold not; intros; inversion H; apply inj_pair2_eq_dec in H1.
-  right; unfold not; intros; inversion H; apply inj_pair2_eq_dec in H1.
-  right; unfold not; intros; inversion H; apply inj_pair2_eq_dec in H1.
-  right; unfold not; intros; inversion H; apply inj_pair2_eq_dec in H1.
-  right; unfold not; intros; inversion H; apply inj_pair2_eq_dec in H1.
-  right; unfold not; intros; inversion H; apply inj_pair2_eq_dec in H1.
-  left; reflexivity.
-Defined.
-  
 Hint Resolve message_eq_dec.
- *)
 
-Definition signed_message_type{t:type}(m:message (Pair t (Encrypt Hash))):type := t.
-
-Definition is_signed{t:type}(m:message (Pair t (Encrypt Hash)))(k:keyType):Prop :=
-  match m in (message r) with
-  | pair r1 (Encrypt Hash) n n' => match (decrypt n' k) with
-                                  | inleft m' => (message_eq (hash r1 n) m')
-                                  | inright _ => False
-                                  end
+Definition is_signed(m:message)(k:keyType):Prop :=
+  match m in message with
+  | pair n n' => match (decrypt n' k) with
+               | inleft m' => (message_eq (hash n) m')
+               | inright _ => False
+               end
   | _ => False
   end.
 
@@ -201,10 +151,21 @@ Proof.
   simpl. tauto.
 Qed.
 
-  Theorem check_dec: forall t:type, forall m:message (Pair t (Encrypt Hash)), forall k, {(is_signed m k)}+{not (is_signed m k)}.
-  Proof. Admitted.
-(*
+Theorem check_dec: forall m:message, forall k, {(is_signed m k)}+{not (is_signed m k)}.
+Proof.
   destruct k.
+  destruct m.
+  right; unfold not; intros; inversion H.
+  right; unfold not; intros; inversion H.
+  right; unfold not; intros; inversion H.
+  right; unfold not; intros; inversion H.
+  destruct (message_eq_dec m2 (encrypt (hash m1) (symmetric k))).
+  left. unfold is_signed.
+
+
+
+
+  destruct k;
   destruct m2; try tauto.
     destruct m2; try tauto.
       destruct (is_inverse k k0).
