@@ -104,11 +104,17 @@ Proof.
   right. unfold not. intros. inversion H. contradiction.
   specialize IHm1 with m2. destruct IHm1. left. simpl. tauto.
   right. unfold not. intros. simpl in H. contradiction.
+
+  specialize IHm1_1 with m2_1.
+  specialize IHm1_2 with m2_2.
+  destruct IHm1_1. destruct IHm1_2.
+
+  left. simpl. tauto.
+  right. unfold not. intros. simpl in H.  destruct H; contradiction.
+  right. unfold not. intros. simpl in H.  destruct H; contradiction.
+  left. reflexivity.
+Defined.
   
-  specialize IHm1 with (encrypt t0 m2 k0).
-  destruct IHm1.
-
-
 (*
 Theorem message_eq_dec: forall t, forall m:(message t), forall m':(message t), {m=m'}+{m<>m'}.
 Proof.
