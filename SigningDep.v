@@ -11,13 +11,12 @@ Provides definitions for:
 
 
 Depends on:
-- DepCrypto.v
+- CryptoDep.v
 *)
 
 Module Signing.
 
 Require Import Omega.
-Require Import CpdtTactics.
 Require Import Eqdep_dec.
 Require Import Peano_dec.
 Require Import Coq.Program.Equality.
