@@ -56,6 +56,7 @@ Proof.
   right. unfold not. intros. inversion H.
   right. unfold not. intros. inversion H.
   destruct (eq_type_dec t t0). subst.
+  destruct (eq_key_dec k k0). subst.
 Admitted.
 
 
