@@ -40,7 +40,7 @@ Qed.
 Theorem hash_eq_dec: forall t1 t2 m1 m2,
     {hash t1 m1 = hash t2 m2} + {hash t1 m1 <> hash t2 m2}.
 Proof.
-  dependent induction m1; dependent induction m2.
+  dependent induction m1; dependent induction m2;
   eq_not_eq (eq_nat_dec n n0).
   right. unfold not. intros. inversion H.
   right. unfold not. intros. inversion H.
@@ -57,6 +57,7 @@ Proof.
   right. unfold not. intros. inversion H.
   destruct (eq_type_dec t t0). subst.
   destruct (eq_key_dec k k0). subst.
+
 Admitted.
 
 

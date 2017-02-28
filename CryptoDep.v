@@ -173,7 +173,10 @@ Defined.
 
 Theorem eq_key_dec: forall k k':keyType, {k=k'}+{k<>k'}.
 Proof.
-  intros.
+  repeat decide equality.
+Defined.
+
+(* intros.
   destruct k; destruct k';
   match goal with
   | [ |- {symmetric ?P = symmetric ?Q} + {symmetric ?P <> symmetric ?Q} ] =>
@@ -185,6 +188,7 @@ Proof.
   | [ |- _ ] => right; unfold not; intros; inversion H
   end.
 Defined.
+ *)
 
 (** Basic messages are natural numbers.  Really should be held abstract, but we
   need an equality decision procedure to determine message equality.  Compound 
@@ -198,6 +202,12 @@ Inductive message : type -> Type :=
 | hash : forall t, message t -> message Hash
 | pair : forall t1 t2, message t1 -> message t2 -> message (Pair t1 t2)
 | bad : forall t, message t.
+
+Theorem eq_message_dec {t} : forall m m': message t, {m=m'}+{m<>m'}.
+Proof.
+  intros; destruct t.
+  
+Abort.
 
 (** Predicate that determines if a message cannot be decrypted.  Could be
   that it is not encrypted to begin with or the wrong key is used. *)
