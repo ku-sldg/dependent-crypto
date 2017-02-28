@@ -19,7 +19,7 @@ Require Import Ensembles.
 Require Import Eqdep_dec.
 Require Import Peano_dec.
 Require Import Coq.Program.Equality.
-
+Require Import CpdtTactics.
 (** Ltac helper functions for discharging cases generated from sumbool types
   using one or two boolean cases. *)
 
@@ -205,8 +205,16 @@ Inductive message : type -> Type :=
 
 Theorem eq_message_dec {t} : forall m m': message t, {m=m'}+{m<>m'}.
 Proof.
-  intros; destruct t.
-  
+  intros; induction m; dependent induction m'.
+  eq_not_eq (eq_nat_dec n n0).
+  right. unfold not. intros. inversion H.
+  eq_not_eq (eq_key_dec k k0).
+  right. unfold not. intros. inversion H.
+  specialize IHm with m'.
+  destruct IHm. subst.
+  eq_not_eq (eq_key_dec k k0).
+  right. unfold not. intros. inversion H.
+  proof_
 Abort.
 
 (** Predicate that determines if a message cannot be decrypted.  Could be
