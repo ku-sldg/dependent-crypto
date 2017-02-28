@@ -213,8 +213,11 @@ Proof.
   specialize IHm with m'.
   destruct IHm. subst.
   eq_not_eq (eq_key_dec k k0).
+  right. unfold not. intros. inversion H. subst.
+  apply inj_pair2_eq_dec in H1. contradiction.
+  intros. apply eq_type_dec.
   right. unfold not. intros. inversion H.
-  proof_
+  
 Abort.
 
 (** Predicate that determines if a message cannot be decrypted.  Could be
