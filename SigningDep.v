@@ -28,9 +28,9 @@ Definition sign{t:type}(m:message t)(k:keyType) :=
   (pair t (Encrypt (Hash t)) m (encrypt (Hash t) (hash t m) k)).
 
 Example sign_ex1:
-  sign (basic 1) (public 1) =
+  sign (basic 1) (private 1) =
   pair Basic (Encrypt (Hash Basic)) (basic 1)
-       (encrypt (Hash Basic) (hash Basic (basic 1)) (public 1)).
+       (encrypt (Hash Basic) (hash Basic (basic 1)) (private 1)).
 Proof.
   cbv. reflexivity.
 Qed.
