@@ -203,26 +203,49 @@ Inductive message : type -> Type :=
 | pair : forall t1 t2, message t1 -> message t2 -> message (Pair t1 t2)
 | bad : forall t, message t.
 
+(*
+Ltac notHyp P :=
+  match goal with
+  | [ _ : P |- _ ] => fail 1
+  | _ =>
+    match P with
+    | ?P1 /\ ?P2 => first [ notHyp P1 | notHyp P2 | fail 2 ]
+    | _ => idtac
+    end
+  end.
+*)
+
+Ltac rightContra :=
+  match goal with
+  | [_ : _ |- {?P} + {?Q} ] => right; unfold not; intros Hrc; inversion Hrc
+  | _ => idtac
+  end.
+
 Theorem eq_message_dec {t} : forall m m': message t, {m=m'}+{m<>m'}.
 Proof.
   intros; induction m; dependent induction m'.
   eq_not_eq (eq_nat_dec n n0).
-  right. unfold not. intros. inversion H.
+  rightContra.
   eq_not_eq (eq_key_dec k k0).
-  right. unfold not. intros. inversion H.
+  rightContra.
+
   specialize IHm with m'.
   destruct IHm. subst.
   eq_not_eq (eq_key_dec k k0).
   right. unfold not. intros. inversion H. subst.
   apply inj_pair2_eq_dec in H1. contradiction.
   intros. apply eq_type_dec.
-  right. unfold not. intros. inversion H.
+
+  rightContra.
+
   specialize IHm with m'.
   destruct IHm. subst. left. reflexivity.
   right. unfold not. intros. inversion H.
   apply inj_pair2_eq_dec in H1. contradiction.
   intros. apply eq_type_dec.
-  right. unfold not. intros. inversion H.
+  
+  rightContra.
+  
   specialize IHm1 with m'1. specialize IHm2 with m'2.
   destruct IHm1; subst. destruct IHm2; subst.
   left. reflexivity.
@@ -231,7 +254,7 @@ Proof.
 
   right. unfold not. intros. inversion H. apply inj_pair2_eq_dec in H1. contradiction.
   intros. apply eq_type_dec.
-
+  
   right. unfold not. intros. inversion H.
   right. unfold not. intros. inversion H.
   right. unfold not. intros. inversion H.
