@@ -25,12 +25,12 @@ Require Export CryptoDep.
 (** Generate a signature using encryption and hash *)
 
 Definition sign{t:type}(m:message t)(k:keyType) :=
-  (pair t (Encrypt Hash) m (encrypt Hash (hash t m) k)).
+  (pair t (Encrypt (Hash t)) m (encrypt (Hash t) (hash t m) k)).
 
 Example sign_ex1:
   sign (basic 1) (public 1) =
-  pair Basic (Encrypt Hash) (basic 1)
-       (encrypt Hash (hash Basic (basic 1)) (public 1)).
+  pair Basic (Encrypt (Hash Basic)) (basic 1)
+       (encrypt (Hash Basic) (hash Basic (basic 1)) (public 1)).
 Proof.
   cbv. reflexivity.
 Qed.
