@@ -20,6 +20,8 @@ Require Import Eqdep_dec.
 Require Import Peano_dec.
 Require Import Coq.Program.Equality.
 Require Import CpdtTactics.
+Require Import SfLib.
+Require Import LibTactics.
 (** Ltac helper functions for discharging cases generated from sumbool types
   using one or two boolean cases. *)
 
@@ -62,6 +64,9 @@ end.
 
 Theorem is_inverse:forall k k', {k = (inverse k')}+{k <> (inverse k')}.
 Proof.
+  repeat decide equality.
+Defined.
+(*
   intros;
   destruct k; destruct k';
   match goal with
@@ -70,7 +75,7 @@ Proof.
   | [ |- {public ?P = (inverse (private ?Q))}+{public ?P <> (inverse (private ?Q))} ] => (eq_not_eq (eq_nat_dec P Q))
   | [ |- _ ] => right; simpl; unfold not; intros; inversion H
   end.
-Defined.
+Defined. *)
 
 (** I don't like these proofs.  They seem crude and are not clean.  Still
  working on them *)
@@ -88,19 +93,23 @@ Proof.
   trivial.
   unfold inverse in e; unfold inverse in e; inversion e; contradiction.
 Qed.
+
+Ltac if_destruct :=
+match goal with
+  | [ |- if ?X then _ else _
+      ] => destruct X; subst
+end.
   
 Example is_inverse_ex3: forall n m, n=m -> if (is_inverse (symmetric m) (symmetric n)) then True else False.
 Proof.
-  intros; destruct (is_inverse (symmetric m) (symmetric n));
-    trivial.
-  subst. unfold not in n0. simpl in n0. apply n0. reflexivity.
+  intros.
+  if_destruct; crush.
 Qed.
 
 Example is_inverse_ex4: forall n m, n<>m -> if (is_inverse (symmetric m) (symmetric n)) then False else True.
 Proof.
-  intros; destruct (is_inverse (symmetric m) (symmetric n));
-    trivial.
-  unfold inverse in e; inversion e. symmetry in H1. contradiction.
+  intros.
+  if_destruct; crush.
 Qed.
 
 (** Various proofs for keys and properties of the inverse operation.  All keys
@@ -110,7 +119,7 @@ Qed.
 Theorem inverse_injective : forall k1 k2, inverse k1 = inverse k2 -> k1 = k2.
 Proof.
   intros.
-  destruct k1; destruct k2; simpl in H; try (inversion H); try (reflexivity).
+  destruct k1; destruct k2; crush.
 Qed.
 
 Hint Resolve inverse_injective.
@@ -124,7 +133,7 @@ Hint Resolve inverse_inverse.
 
 Theorem inverse_surjective : forall k, exists k', (inverse k) = k'.
 Proof.
-  intros; exists (inverse k); auto.
+  intros. eauto.
 Qed.
 
 Hint Resolve inverse_surjective.
@@ -149,9 +158,28 @@ Inductive type : Type :=
 (** [type] equivalence is decidable.  Should eventually use the built-in
   coq function rather than do this proof. *)
 
+Ltac whack := 
+  try (left; subst; reflexivity);
+  try (right; unfold not; intros H; inversion H; contradiction).
+  
 Theorem eq_type_dec: forall x y : type, {x = y} + {x <> y}.
 Proof.
-  induction x, y;
+  repeat decide equality.
+Defined.
+
+(*
+  induction x, y; whack.
+
+  try (left; reflexivity);
+  try (right; unfold not; intros; inversion H; contradiction).
+  destruct (IHx y); try( left; subst; reflexivity);
+  try (right; unfold not; intros; inversion H; contradiction).
+  destruct (IHx y); try( left; subst; reflexivity);
+  try (right; unfold not; intros; inversion H; contradiction).
+  
+  
+  
+  try (right; unfold not; intros; inversion H).
   match goal with
   | [ |- {?T = ?T} + {?T <> ?T} ] => left; reflexivity
   | [ |- {?C ?T = ?C ?U} + {?C ?T <> ?C ?U} ] =>
@@ -169,7 +197,7 @@ Proof.
       | subst; right; unfold not; intros; inversion H; contradiction ]
   | [ |- _ ] => right; unfold not; intros; inversion H 
   end.
-Defined.
+Defined. *)
 
 Theorem eq_key_dec: forall k k':keyType, {k=k'}+{k<>k'}.
 Proof.
@@ -203,42 +231,58 @@ Inductive message : type -> Type :=
 | pair : forall t1 t2, message t1 -> message t2 -> message (Pair t1 t2)
 | bad : forall t, message t.
 
+  Ltac nat_destruct :=
+  match goal with
+  | [ n1 : nat,
+      n2 : nat
+      |- _
+      ] => destruct (eq_nat_dec n1 n2)
+  end.
+
+  Ltac key_destruct :=
+  match goal with
+  | [ k1 : keyType,
+      k2 : keyType
+      |- _
+      ] => destruct (eq_key_dec k1 k2)
+  end.
+
+  Ltac inj_destruct := simpl_existTs; [contradiction; apply eq_type_dec].
+  
+  Ltac ih_destruct :=
+        match goal with
+        | [
+          IH : forall m' : ?MT, {_ = m'} + {_ <> m'},
+            m' : ?MT
+            |- _
+        ] =>  destruct (IH m'); subst; clear IH; try whack ;
+             right; unfold not; intros H; inversion H; inj_destruct
+        end.
+      
+  Ltac ih_two_destruct :=
+    (*match n with
+      | S ?n' => *)
+        match goal with
+        | [
+          IH : forall m' : ?MT, {_ = m'} + {_ <> m'},
+          m' : ?MT,
+          IH2 : forall m' : ?MT2, {_ = m'} + {_ <> m'},
+          m2' : ?MT2
+            |- _
+        ] =>  destruct (IH m'); subst; clear IH;
+             destruct (IH2 m2'); subst; clear IH2; try whack;
+             right; unfold not; intros H; inversion H; inj_destruct
+        (*end*)
+    end.
+
 Theorem eq_message_dec {t} : forall m m': message t, {m=m'}+{m<>m'}.
 Proof.
-  intros; induction m; dependent induction m'.
-  eq_not_eq (eq_nat_dec n n0).
-  right. unfold not. intros. inversion H.
-  eq_not_eq (eq_key_dec k k0).
-  right. unfold not. intros. inversion H.
-  specialize IHm with m'.
-  destruct IHm. subst.
-  eq_not_eq (eq_key_dec k k0).
-  right. unfold not. intros. inversion H. subst.
-  apply inj_pair2_eq_dec in H1. contradiction.
-  intros. apply eq_type_dec.
-  right. unfold not. intros. inversion H.
-  specialize IHm with m'.
-  destruct IHm. subst. left. reflexivity.
-  right. unfold not. intros. inversion H.
-  apply inj_pair2_eq_dec in H1. contradiction.
-  intros. apply eq_type_dec.
-  right. unfold not. intros. inversion H.
-  specialize IHm1 with m'1. specialize IHm2 with m'2.
-  destruct IHm1; subst. destruct IHm2; subst.
-  left. reflexivity.
-  right. unfold not. intros. inversion H. apply inj_pair2_eq_dec in H1. contradiction.
-  intros. apply eq_type_dec.
-
-  right. unfold not. intros. inversion H. apply inj_pair2_eq_dec in H1. contradiction.
-  intros. apply eq_type_dec.
-
-  right. unfold not. intros. inversion H.
-  right. unfold not. intros. inversion H.
-  right. unfold not. intros. inversion H.
-  right. unfold not. intros. inversion H.
-  right. unfold not. intros. inversion H.
-  right. unfold not. intros. inversion H.
-  left. reflexivity.
+  intros; induction m; dependent induction m';
+  try (nat_destruct);
+  try (key_destruct);
+  try whack;
+  try(ih_destruct);
+  ih_two_destruct.
 Defined.
 
 (** Predicate that determines if a message cannot be decrypted.  Could be
@@ -265,11 +309,9 @@ Theorem decryptable_inverse: forall t:type, forall m:(message t), forall k,
     (is_not_decryptable m k) <-> not (is_decryptable m k).
 Proof.
   intros.
-  split. destruct m; try (tauto).
-  simpl. intros. assumption.
-  intros. destruct m; try (reflexivity).
-  simpl. tauto.
-Qed.  
+  split; 
+  destruct m; try(reflexivity); auto.
+Qed.
 
 (** Type-level function to determine the type of a decrypted thing. *)
 
@@ -291,14 +333,8 @@ Fixpoint decrypt{t:type}(m:message (Encrypt t))(k:keyType):message t+{(is_not_de
          | hash _ _ => inright _ _
          | pair _ _ _ _ => inright _ _
          | bad _ => inright _ _
-         end.
-Proof.
-  reflexivity.
-  reflexivity.
-  simpl. assumption.
-  reflexivity.
-  reflexivity.
-  reflexivity.
+         end; 
+  repeat (simpl; auto).
 Defined.
 
 Example decrypt_ex1: decrypt(encrypt Basic (basic 1) (symmetric 1)) (symmetric 1) = inleft (basic 1).
