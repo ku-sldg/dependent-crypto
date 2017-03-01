@@ -143,7 +143,7 @@ Inductive type : Type :=
 | Basic : type
 | Key : type
 | Encrypt : type -> type
-| Hash : type
+| Hash : type -> type
 | Pair : type -> type -> type.
 
 (** [type] equivalence is decidable.  Should eventually use the built-in
@@ -199,7 +199,7 @@ Inductive message : type -> Type :=
 | basic : nat -> message Basic
 | key : keyType -> message Key
 | encrypt : forall t, message t -> keyType -> message (Encrypt t)
-| hash : forall t, message t -> message Hash
+| hash : forall t, message t -> message (Hash t)
 | pair : forall t1 t2, message t1 -> message t2 -> message (Pair t1 t2)
 | bad : forall t, message t.
 
@@ -217,9 +217,21 @@ Proof.
   apply inj_pair2_eq_dec in H1. contradiction.
   intros. apply eq_type_dec.
   right. unfold not. intros. inversion H.
-  right. unfold not. intros. inversion H; subst. admit.
+  specialize IHm with m'.
+  destruct IHm. subst. left. reflexivity.
   right. unfold not. intros. inversion H.
-  admit.
+  apply inj_pair2_eq_dec in H1. contradiction.
+  intros. apply eq_type_dec.
+  right. unfold not. intros. inversion H.
+  specialize IHm1 with m'1. specialize IHm2 with m'2.
+  destruct IHm1; subst. destruct IHm2; subst.
+  left. reflexivity.
+  right. unfold not. intros. inversion H. apply inj_pair2_eq_dec in H1. contradiction.
+  intros. apply eq_type_dec.
+
+  right. unfold not. intros. inversion H. apply inj_pair2_eq_dec in H1. contradiction.
+  intros. apply eq_type_dec.
+
   right. unfold not. intros. inversion H.
   right. unfold not. intros. inversion H.
   right. unfold not. intros. inversion H.
@@ -227,7 +239,7 @@ Proof.
   right. unfold not. intros. inversion H.
   right. unfold not. intros. inversion H.
   left. reflexivity.
-Abort.
+Defined.
 
 (** Predicate that determines if a message cannot be decrypted.  Could be
   that it is not encrypted to begin with or the wrong key is used. *)
