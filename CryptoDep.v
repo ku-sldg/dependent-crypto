@@ -220,7 +220,7 @@ Ltac rightContra :=
   | [_ : _ |- {?P1 = ?P1} + {_} ] => left; reflexivity
   | [_ : _ |- {key ?P1 = key ?P2} + {key ?P1 <> key ?P2} ] => eq_not_eq (eq_key_dec P1 P2)
   | [_ : _ |- {basic ?P1 = basic ?P2} + {basic ?P1 <> basic ?P2} ] => eq_not_eq (eq_nat_dec P1 P2)
-  | [_ : _ |- {?P} + {?Q} ] => right; unfold not; intros Hrc; inversion Hrc
+  | [_ : _ |- {?P} + {?Q} ] => right; unfold not; intros ?H; inversion H
   end.
 
 Theorem eq_message_dec {t} : forall m m': message t, {m=m'}+{m<>m'}.
@@ -293,7 +293,7 @@ Proof.
   simpl. intros. assumption.
   intros. destruct m; try (reflexivity).
   simpl. tauto.
-Qed.  
+Qed.
 
 (** Type-level function to determine the type of a decrypted thing. *)
 
