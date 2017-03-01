@@ -217,7 +217,16 @@ Proof.
   apply inj_pair2_eq_dec in H1. contradiction.
   intros. apply eq_type_dec.
   right. unfold not. intros. inversion H.
-  
+  right. unfold not. intros. inversion H; subst. admit.
+  right. unfold not. intros. inversion H.
+  admit.
+  right. unfold not. intros. inversion H.
+  right. unfold not. intros. inversion H.
+  right. unfold not. intros. inversion H.
+  right. unfold not. intros. inversion H.
+  right. unfold not. intros. inversion H.
+  right. unfold not. intros. inversion H.
+  left. reflexivity.
 Abort.
 
 (** Predicate that determines if a message cannot be decrypted.  Could be
