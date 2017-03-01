@@ -217,16 +217,17 @@ Ltac notHyp P :=
 
 Ltac rightContra :=
   match goal with
+  | [_ : _ |- {?P1 = ?P1} + {_} ] => left; reflexivity
+  | [_ : _ |- {key ?P1 = key ?P2} + {key ?P1 <> key ?P2} ] => eq_not_eq (eq_key_dec P1 P2)
+  | [_ : _ |- {basic ?P1 = basic ?P2} + {basic ?P1 <> basic ?P2} ] => eq_not_eq (eq_nat_dec P1 P2)
   | [_ : _ |- {?P} + {?Q} ] => right; unfold not; intros Hrc; inversion Hrc
-  | _ => idtac
   end.
 
 Theorem eq_message_dec {t} : forall m m': message t, {m=m'}+{m<>m'}.
 Proof.
   intros; induction m; dependent induction m'.
   eq_not_eq (eq_nat_dec n n0).
-  rightContra.
-  eq_not_eq (eq_key_dec k k0).
+  rightContra. rightContra.
   rightContra.
 
   specialize IHm with m'.
@@ -255,13 +256,13 @@ Proof.
   right. unfold not. intros. inversion H. apply inj_pair2_eq_dec in H1. contradiction.
   intros. apply eq_type_dec.
   
-  right. unfold not. intros. inversion H.
-  right. unfold not. intros. inversion H.
-  right. unfold not. intros. inversion H.
-  right. unfold not. intros. inversion H.
-  right. unfold not. intros. inversion H.
-  right. unfold not. intros. inversion H.
-  left. reflexivity.
+  rightContra.
+  rightContra.
+  rightContra.
+  rightContra.
+  rightContra.
+  rightContra.
+  rightContra.
 Defined.
 
 (** Predicate that determines if a message cannot be decrypted.  Could be
