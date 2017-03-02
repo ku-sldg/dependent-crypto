@@ -35,6 +35,12 @@ Proof.
   cbv. reflexivity.
 Qed.
 
+Definition signed{t:type}(m:message t)(k:keyType) : Prop :=
+  match m with
+  | pair _ (Encrypt (Hash _)) b s => s = encrypt (Hash t) (hash t b) (inverse k)
+  | _ => False
+  end.
+
 (** [hash_eq_dec] is currently admitted and not usable. *)
 
 Theorem hash_eq_dec: forall t1 t2 m1 m2,
