@@ -46,8 +46,15 @@ Proof.
 Defined.
 
 Eval compute in signed (pair Basic (Encrypt (Hash Basic)) (basic 1)
-                       (encrypt (Hash Basic) (hash Basic (basic 1)) (private 1))) (basic 1) (public 1).
+                             (encrypt (Hash Basic) (hash Basic (basic 1)) (private 1))) (basic 1) (public 1).
 
+Example xx : exists x, signed (pair Basic (Encrypt (Hash Basic)) (basic 1)
+                               (encrypt (Hash Basic) (hash Basic (basic 1)) (private 1))) (basic 1) (public 1) = x.
+Proof.
+  eexists.
+  compute.
+  rewrite_refl_id. reflexivity.
+Qed.
 
 (** [hash_eq_dec] is currently admitted and not usable. *)
 
@@ -248,7 +255,7 @@ Proof.
 Qed.
 
   Theorem check_dec: forall t:type, forall m:message (Pair t (Encrypt Hash)), forall k, {(is_signed m k)}+{not (is_signed m k)}.
-  Proof. Admitted.
+  Proof.
 (*
   destruct k.
   destruct m2; try tauto.
