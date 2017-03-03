@@ -161,6 +161,11 @@ Inductive type : Type :=
 Ltac whack := 
   try (left; subst; reflexivity);
   try (right; unfold not; intros H; inversion H; contradiction).
+
+Ltac expand_right := 
+  right; unfold not; intros H; inversion H.
+
+
   
 Theorem eq_type_dec: forall x y : type, {x = y} + {x <> y}.
 Proof.
@@ -248,32 +253,23 @@ Inductive message : type -> Type :=
   end.
 
   Ltac inj_destruct := simpl_existTs; [contradiction; apply eq_type_dec].
-  
+
+  Ltac ih_discharge :=
+    try whack ;
+    try expand_right;
+    inj_destruct.
+    
   Ltac ih_destruct :=
         match goal with
         | [
           IH : forall m' : ?MT, {_ = m'} + {_ <> m'},
             m' : ?MT
             |- _
-        ] =>  destruct (IH m'); subst; clear IH; try whack ;
-             right; unfold not; intros H; inversion H; inj_destruct
-        end.
-      
-  Ltac ih_two_destruct :=
-    (*match n with
-      | S ?n' => *)
-        match goal with
-        | [
-          IH : forall m' : ?MT, {_ = m'} + {_ <> m'},
-          m' : ?MT,
-          IH2 : forall m' : ?MT2, {_ = m'} + {_ <> m'},
-          m2' : ?MT2
-            |- _
         ] =>  destruct (IH m'); subst; clear IH;
-             destruct (IH2 m2'); subst; clear IH2; try whack;
-             right; unfold not; intros H; inversion H; inj_destruct
-        (*end*)
-    end.
+             ih_destruct
+
+        | _ => ih_discharge
+        end.
 
 Theorem eq_message_dec {t} : forall m m': message t, {m=m'}+{m<>m'}.
 Proof.
@@ -281,9 +277,8 @@ Proof.
   try (nat_destruct);
   try (key_destruct);
   try whack;
-  try(ih_destruct);
-  ih_two_destruct.
-Defined.
+  try ih_destruct.
+Qed.
 
 (** Predicate that determines if a message cannot be decrypted.  Could be
   that it is not encrypted to begin with or the wrong key is used. *)
