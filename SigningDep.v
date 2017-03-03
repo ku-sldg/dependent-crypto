@@ -36,14 +36,18 @@ Proof.
 Qed.
 
 Theorem signed{t}:
-  forall m: message (Pair t (Encrypt (Hash t))),
-  forall k:keyType,
-    {True}+{not True}.
+  forall m:message (Pair t (Encrypt (Hash t))), forall b:message t, forall k:keyType,
+      {m=sign b (inverse k)}+{m<>sign b (inverse k)}.
 Proof.
   intros.
-  
-  
-  {m = pair t (Encrypt (Hash t)) b encrypt (Hash th) (hash t b) (inverse k).
+  destruct (eq_message_dec m (sign b (inverse k))).
+  left. assumption.
+  right. assumption.
+Defined.
+
+Eval compute in signed (pair Basic (Encrypt (Hash Basic)) (basic 1)
+                       (encrypt (Hash Basic) (hash Basic (basic 1)) (private 1))) (basic 1) (public 1).
+
 
 (** [hash_eq_dec] is currently admitted and not usable. *)
 
