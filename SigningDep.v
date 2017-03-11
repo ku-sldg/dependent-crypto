@@ -28,11 +28,32 @@ Definition sign{t:type}(m:message t)(k:keyType) :=
   (pair t (Encrypt (Hash t)) m (encrypt (Hash t) (hash t m) k)).
 
 Example sign_ex1:
-  sign (basic 1) (public 1) =
+  sign (basic 1) (private 1) =
   pair Basic (Encrypt (Hash Basic)) (basic 1)
-       (encrypt (Hash Basic) (hash Basic (basic 1)) (public 1)).
+       (encrypt (Hash Basic) (hash Basic (basic 1)) (private 1)).
 Proof.
   cbv. reflexivity.
+Qed.
+
+Theorem signed{t}:
+  forall m:message (Pair t (Encrypt (Hash t))), forall b:message t, forall k:keyType,
+      {m=sign b (inverse k)}+{m<>sign b (inverse k)}.
+Proof.
+  intros.
+  destruct (eq_message_dec m (sign b (inverse k))).
+  left. assumption.
+  right. assumption.
+Defined.
+
+Eval compute in signed (pair Basic (Encrypt (Hash Basic)) (basic 1)
+                             (encrypt (Hash Basic) (hash Basic (basic 1)) (private 1))) (basic 1) (public 1).
+
+Example xx : exists x, signed (pair Basic (Encrypt (Hash Basic)) (basic 1)
+                               (encrypt (Hash Basic) (hash Basic (basic 1)) (private 1))) (basic 1) (public 1) = x.
+Proof.
+  eexists.
+  compute.
+  rewrite_refl_id. reflexivity.
 Qed.
 
 (** [hash_eq_dec] is currently admitted and not usable. *)
@@ -234,7 +255,7 @@ Proof.
 Qed.
 
   Theorem check_dec: forall t:type, forall m:message (Pair t (Encrypt Hash)), forall k, {(is_signed m k)}+{not (is_signed m k)}.
-  Proof. Admitted.
+  Proof.
 (*
   destruct k.
   destruct m2; try tauto.
